@@ -157,6 +157,25 @@ interface CacheEntry {
 }
 
 /**
+ * 格式化 TikHub 错误信息
+ */
+export function formatTikHubError(error: any, actionName: string): string {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const resData = error.response?.data as any;
+    const detailMsg = resData?.detail?.message_zh || resData?.detail?.message || resData?.message;
+    if (status === 402) {
+      return `${actionName}失败 (HTTP 402 余额不足)：${detailMsg || '当前接口需要付费余额，免费额度不可用或账户余额不足，请前往 https://user.tikhub.io/users/add_credit 充值'}`;
+    }
+    if (detailMsg) {
+      return `${actionName}失败 (HTTP ${status || 'Error'})：${detailMsg}`;
+    }
+    return `${actionName}失败 (HTTP ${status || 'Error'})：${error.message}`;
+  }
+  return `${actionName}失败：${error instanceof Error ? error.message : String(error)}`;
+}
+
+/**
  * TikHub API 客户端类
  */
 export class TikHubAPIClient {
@@ -668,12 +687,7 @@ export class TikHubAPIClient {
 
       return data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `TikTok API 搜索失败: ${error.response?.status} ${error.response?.data?.message || error.message}`
-        );
-      }
-      throw error;
+      throw new Error(formatTikHubError(error, 'TikTok API 搜索'));
     }
   }
 
@@ -713,12 +727,7 @@ export class TikHubAPIClient {
 
       return data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `TikTok API 评论获取失败: ${error.response?.status} ${error.response?.data?.message || error.message}`
-        );
-      }
-      throw error;
+      throw new Error(formatTikHubError(error, 'TikTok API 评论获取'));
     }
   }
 
@@ -1535,12 +1544,7 @@ export class TikHubAPIClient {
 
       return data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Xiaohongshu API 搜索失败: ${error.response?.status} ${error.response?.data?.message || error.message}`
-        );
-      }
-      throw error;
+      throw new Error(formatTikHubError(error, '小红书 API 搜索'));
     }
   }
 
@@ -1589,12 +1593,7 @@ export class TikHubAPIClient {
 
       return data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Xiaohongshu API 评论获取失败: ${error.response?.status} ${error.response?.data?.message || error.message}`
-        );
-      }
-      throw error;
+      throw new Error(formatTikHubError(error, '小红书 API 评论获取'));
     }
   }
 

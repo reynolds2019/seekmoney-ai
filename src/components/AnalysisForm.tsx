@@ -99,6 +99,11 @@ export default function AnalysisForm({ onSubmit, isLoading }: AnalysisFormProps)
             </svg>
           </div>
         </div>
+        {dataSource === 'xiaohongshu' && (
+          <p className="mt-1.5 text-xs text-amber-600 bg-amber-50/80 px-2.5 py-1.5 rounded-lg border border-amber-200/60">
+            ⚠️ 提示：小红书为 TikHub 平台付费路由，不接受免费试用额度，需账户具备充值余额。
+          </p>
+        )}
       </div>
 
       {/* 关键词输入 */}

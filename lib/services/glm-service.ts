@@ -80,7 +80,11 @@ export class GLMService {
       throw new Error('GLM_API_KEY 环境变量未设置');
     }
     this.apiKey = apiKey;
-    this.baseURL = process.env.GLM_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    let baseURL = process.env.GLM_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    if (!baseURL.endsWith('/chat/completions')) {
+      baseURL = baseURL.replace(/\/+$/, '') + '/chat/completions';
+    }
+    this.baseURL = baseURL;
     this.model = process.env.GLM_MODEL_NAME || 'glm-4.6';
     // glm-4.6 默认启用思考模式
     this.useThinking = this.model.includes('4.6') || process.env.GLM_USE_THINKING === 'true';

@@ -20,8 +20,9 @@ export interface EmbeddingProviderConfig {
   // OpenAI 配置
   openai?: {
     apiKey: string;
-    model?: 'text-embedding-3-small' | 'text-embedding-3-large';
+    model?: string;
     baseURL?: string;
+    batchSize?: number;
     timeout?: number;
     maxRetries?: number;
   };
@@ -155,8 +156,10 @@ export class OpenAIEmbeddingProvider implements IEmbeddingProvider {
     });
 
     this.model = config.model || 'text-embedding-3-small';
-    this.dimension = this.model === 'text-embedding-3-small' ? 512 : 3072;
-    this.batchSize = 100; // OpenAI 支持最大 100
+    this.dimension = this.model === 'text-embedding-3-small' ? 512 : 1536;
+    // 通义千问 text-embedding-v4 等模型限制单批次最大 10 条文本，OpenAI 官方支持 100 条
+    const isQwenOrV4 = this.model.includes('v4') || this.model.includes('qwen') || this.model.includes('dashscope');
+    this.batchSize = config.batchSize || (isQwenOrV4 ? 10 : (this.model.startsWith('text-embedding-3') ? 100 : 10));
 
     this.stats = {
       provider: 'openai',
@@ -212,6 +215,9 @@ export class OpenAIEmbeddingProvider implements IEmbeddingProvider {
         });
 
         const batchEmbeddings = response.data.map(d => d.embedding);
+        if (batchEmbeddings.length > 0 && batchEmbeddings[0].length > 0) {
+          this.dimension = batchEmbeddings[0].length;
+        }
         embeddings.push(...batchEmbeddings);
 
         // 更新统计
@@ -552,7 +558,8 @@ export function createConfigFromEnv(): EmbeddingProviderConfig {
     openai: {
       apiKey: process.env.OPENAI_API_KEY || '',
       model: (process.env.OPENAI_EMBEDDING_MODEL as any) || 'text-embedding-3-small',
-      baseURL: process.env.OPENAI_BASE_URL
+      baseURL: process.env.OPENAI_BASE_URL,
+      batchSize: process.env.OPENAI_EMBEDDING_BATCH_SIZE ? parseInt(process.env.OPENAI_EMBEDDING_BATCH_SIZE, 10) : undefined
     },
     zhipuai: {
       apiKey: process.env.GLM_API_KEY || '',

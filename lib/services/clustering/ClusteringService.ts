@@ -174,15 +174,19 @@ export class ClusteringService {
   /**
    * 运行异步步骤并记录
    */
-  private stepAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
-    return new Promise(async (resolve) => {
-      const start = Date.now();
+  private async stepAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    const start = Date.now();
+    try {
       const result = await fn();
       const duration = Date.now() - start;
       this.steps.push({ name, duration });
       console.log(`[ClusteringService] ${name}: ${duration}ms`);
-      resolve(result);
-    });
+      return result;
+    } catch (error) {
+      const duration = Date.now() - start;
+      console.error(`[ClusteringService] ${name} 步骤失败 (${duration}ms):`, error);
+      throw error;
+    }
   }
 
   /**

@@ -29,7 +29,11 @@ export class AIProductService {
   constructor() {
     this.apiKey = process.env.GLM_API_KEY || '';
     this.modelName = process.env.GLM_MODEL_NAME || 'glm-4-flash';
-    this.baseUrl = process.env.GLM_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    let baseUrl = process.env.GLM_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    if (!baseUrl.endsWith('/chat/completions')) {
+      baseUrl = baseUrl.replace(/\/+$/, '') + '/chat/completions';
+    }
+    this.baseUrl = baseUrl;
   }
 
   async analyzeForAIProduct(texts: string[], locale: string = 'zh'): Promise<AIProductAnalysis> {
