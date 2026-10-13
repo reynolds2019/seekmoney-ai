@@ -124,3 +124,8 @@ Slogan：中文：痛点一键透视，商机即刻成型。英文：From pain p
 - [登录/注册]弹窗文案过于繁琐，需简化；6位验证码默认内置777777，界面上无需显示该提示。
 ```
 
+## 补充登录验证功能
+```
+参考“E:\innovate-app\wechat-post-assistant”工程代码，读取该工程中“wechat-post-backend\configs\config.environment2.yaml”里的 email 相关配置，在当前工程中实现基于 Supabase 的邮件验证码发送及验证功能。
+```
+

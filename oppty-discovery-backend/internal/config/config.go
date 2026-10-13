@@ -73,11 +73,21 @@ type TikHubConfig struct {
 	TimeoutSeconds int    `yaml:"timeoutSeconds"`
 }
 
+// EmailConfig 邮件服务配置
+type EmailConfig struct {
+	UseInbucket       bool   `yaml:"use_inbucket"`
+	InbucketURL       string `yaml:"inbucket_url"`
+	SupabaseURL       string `yaml:"supabase_url"`
+	AnonKey           string `yaml:"anon_key"`
+	CodeExpireMinutes int    `yaml:"code_expire_minutes"`
+}
+
 // AppConfig 应用聚合总配置
 type AppConfig struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	Supabase SupabaseConfig `yaml:"supabase"`
+	Email    EmailConfig    `yaml:"email"`
 	Minio    MinioConfig    `yaml:"minio"`
 	LLM      LLMConfig      `yaml:"llm"`
 	TikHub   TikHubConfig   `yaml:"tikhub"`

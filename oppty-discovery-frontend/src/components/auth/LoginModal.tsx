@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, KeyRound, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Mail, KeyRound, Loader2, Radar, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/client';
 
 export const LoginModal: React.FC = () => {
   const { isLoginModalOpen, closeLoginModal, setAuthSession } = useAuth();
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('777777');
+  const [code, setCode] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -33,7 +33,7 @@ export const LoginModal: React.FC = () => {
     try {
       const resp = await authApi.sendCode(email);
       setCooldown(resp.cooldownSeconds || 60);
-      setSuccessNotice('验证码已发送至您的邮箱');
+      setSuccessNotice('验证码已发送，请前往您的邮箱查收并填入');
     } catch (err: any) {
       setErrorMessage(err.message || '发送验证码失败');
     } finally {
@@ -77,8 +77,8 @@ export const LoginModal: React.FC = () => {
 
         {/* 头部标题与简介 */}
         <div className="text-center mb-5">
-          <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-2.5 shadow-inner">
-            <Sparkles className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white mx-auto mb-2.5 shadow-md shadow-blue-500/20">
+            <Radar className="w-5 h-5 animate-pulse" />
           </div>
           <h2 className="text-lg font-bold text-gray-900">登录 / 注册</h2>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -104,13 +104,14 @@ export const LoginModal: React.FC = () => {
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1">电子邮箱</label>
             <div className="relative flex items-center">
-              <Mail className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
+              <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="email"
                 placeholder="请输入您的邮箱"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-9 pr-24 text-sm"
+                className="input-field !pl-10 !pr-28 text-sm"
+                style={{ paddingLeft: '2.5rem', paddingRight: '7rem' }}
                 required
               />
               <button
@@ -134,17 +135,19 @@ export const LoginModal: React.FC = () => {
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1">6位验证码</label>
             <div className="relative flex items-center">
-              <KeyRound className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
+              <KeyRound className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 maxLength={6}
-                placeholder="请输入6位验证码"
+                placeholder="请输入收到的6位验证码"
                 value={code}
                 onChange={(e) => setCode(e.target.value.trim())}
-                className="input-field pl-9 tracking-widest font-mono text-sm"
+                className="input-field !pl-10 tracking-widest font-mono text-sm"
+                style={{ paddingLeft: '2.5rem' }}
                 required
               />
             </div>
+            <p className="text-[11px] text-gray-400 mt-1">请先点击“获取验证码”，前往您的邮箱查收后填入</p>
           </div>
 
           {/* 提交按钮 */}

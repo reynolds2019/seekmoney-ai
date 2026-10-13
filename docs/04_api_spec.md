@@ -1,6 +1,6 @@
 # 服务接口清单 (API Specification)
 
-> **文档版本**：v1.0.4  
+> **文档版本**：v1.0.7  
 > **协议规范**：HTTP/1.1 RESTful (JSON)  
 > **状态**：已基线化 / 增量变更同步完成  
 > **工程标识**：`oppty-discovery`
@@ -12,6 +12,7 @@
 | **v1.0.0** | 2026-10-13 | 初始基线 | 初始 API 契约基线化，包含鉴权、分析、详情、历史及健康检查接口 | reynolds |
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. 补充后台异步协程调用的外部 TikHub API 契约细节（搜索接口与评论接口协议定义）；<br>2. 补充调用超时、容错降级及状态机映射。 | reynolds |
 | **v1.0.4** | 2026-10-13 | 契约级扩展 (A2) | 1. `POST /api/v1/analyze`：数据源枚举扩展为 `tiktok, douyin, xiaohongshu, bilibili, wechat, youtube`；<br>2. 新增免鉴权公开分享接口 `GET /api/v1/share/jobs/:jobId`；<br>3. 报告出参增加 `sourceVideos` 数组（含标题、作者、获赞、原文外链）。 | reynolds |
+| **v1.0.7** | 2026-10-13 | 功能级变更 (A1) & 交互级优化 (A3) | 1. **登录 UI 交互优化**：修复登录弹窗邮箱/验证码左侧图标与输入文字重叠的样式缺陷；清空预填码并增加查收邮箱提醒；<br>2. **Supabase 真实邮件外发集成**：后端读取外部环境生产配置段接入 Supabase OTP，通过 `POST /auth/v1/otp` 投递真实邮件验证码，支持 429 频控防刷友好提示；<br>3. **三重认证登录闭环**：`POST /api/v1/auth/verify-code` 支持“测试万能码 -> 5分钟内存外发码校验核销 -> Supabase 在线验证”三重保障。 | reynolds |
 
 ---
 

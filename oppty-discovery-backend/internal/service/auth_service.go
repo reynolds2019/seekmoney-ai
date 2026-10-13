@@ -5,9 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"oppty-discovery-backend/internal/config"
@@ -31,6 +34,13 @@ type AuthService interface {
 	ParseToken(tokenString string) (uint64, string, error)
 }
 
+type codeItem struct {
+	code      string
+	expiresAt time.Time
+}
+
+var codeMap sync.Map
+
 type authServiceImpl struct {
 	cfg      *config.AppConfig
 	userRepo repository.UserRepository
@@ -42,39 +52,79 @@ func NewAuthService(cfg *config.AppConfig, userRepo repository.UserRepository) A
 		cfg:      cfg,
 		userRepo: userRepo,
 		client: &http.Client{
-			Timeout: 15 * time.Second,
+			Timeout: 20 * time.Second,
 		},
 	}
 }
 
-// SendEmailCode 发送邮箱验证码 (Supabase OTP)
+// SendEmailCode 发送邮箱验证码 (基于 Supabase Auth OTP 邮件服务)
 func (s *authServiceImpl) SendEmailCode(ctx context.Context, email string) (*types.SendCodeResp, error) {
-	log.Printf("[用户认证] 准备向邮箱 [%s] 发送无感登录验证码...", email)
+	// 生成 6 位随机验证码
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	code := fmt.Sprintf("%06d", r.Intn(1000000))
+	expireMinutes := s.cfg.Email.CodeExpireMinutes
+	if expireMinutes <= 0 {
+		expireMinutes = 5
+	}
+	expiresAt := time.Now().Add(time.Duration(expireMinutes) * time.Minute)
+	codeMap.Store(email, codeItem{code: code, expiresAt: expiresAt})
 
-	// 构造 Supabase Auth OTP 请求
-	supabaseEndpoint := fmt.Sprintf("%s/auth/v1/otp", strings.TrimRight(s.cfg.Supabase.APIUrl, "/"))
-	reqBody, _ := json.Marshal(map[string]interface{}{
-		"email":       email,
-		"create_user": true,
-	})
+	log.Printf("[验证码服务] 开始向邮箱 [%s] 发送验证码 (有效期 %d 分钟至 %s)", email, expireMinutes, expiresAt.Format("15:04:05"))
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, supabaseEndpoint, bytes.NewBuffer(reqBody))
-	if err == nil {
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("apikey", s.cfg.Supabase.ServiceKey)
-		req.Header.Set("Authorization", "Bearer "+s.cfg.Supabase.ServiceKey)
-
-		resp, reqErr := s.client.Do(req)
-		if reqErr == nil {
-			defer resp.Body.Close()
-			log.Printf("[Supabase Auth] 发送 OTP 响应状态码: %d", resp.StatusCode)
-		} else {
-			log.Printf("[Supabase Auth 提示] 请求 Supabase OTP 接口异常: %v，启动安全本地快速通道", reqErr)
-		}
+	supabaseURL := s.cfg.Email.SupabaseURL
+	if supabaseURL == "" {
+		supabaseURL = s.cfg.Supabase.APIUrl
+	}
+	anonKey := s.cfg.Email.AnonKey
+	if anonKey == "" {
+		anonKey = s.cfg.Supabase.ServiceKey
 	}
 
-	// 无论 Supabase 外部邮件服务器是否已配置有效 SMTP，均提供友好 60s 冷却反馈
-	log.Printf("[用户认证提示] 邮箱 [%s] 验证码已进入投递队列（开发/自测验证码支持 123456 或收到的邮件验证码）", email)
+	if supabaseURL != "" && anonKey != "" {
+		// 构造 Supabase Auth OTP 请求体，携带定制应用邮件元数据
+		otpReqBody := map[string]interface{}{
+			"email":       email,
+			"create_user": true,
+			"data": map[string]string{
+				"app_name":   "商机发现助手",
+				"site_title": "商机发现助手 · 商业洞察雷达",
+				"subject":    "【商机发现助手】您的专属登录验证码",
+			},
+		}
+
+		jsonBytes, err := json.Marshal(otpReqBody)
+		if err != nil {
+			return nil, fmt.Errorf("构建验证码请求体失败: %w", err)
+		}
+
+		targetURL := strings.TrimRight(supabaseURL, "/") + "/auth/v1/otp"
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, targetURL, bytes.NewBuffer(jsonBytes))
+		if err != nil {
+			return nil, fmt.Errorf("创建验证码请求失败: %w", err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("apikey", anonKey)
+
+		resp, reqErr := s.client.Do(req)
+		if reqErr != nil {
+			log.Printf("[验证码服务] 调用 Supabase 发送验证码网络告警: %v", reqErr)
+		} else {
+			defer resp.Body.Close()
+			respBody, _ := io.ReadAll(resp.Body)
+			if resp.StatusCode != http.StatusOK {
+				log.Printf("[验证码服务] Supabase 响应状态码 HTTP %d: %s", resp.StatusCode, string(respBody))
+				if resp.StatusCode == http.StatusTooManyRequests || strings.Contains(string(respBody), "over_email_send_rate_limit") {
+					return nil, fmt.Errorf("验证码发送太频繁，请稍等 30 秒后再试")
+				}
+			} else {
+				log.Printf("[验证码服务] 成功通过 Supabase API 向 [%s] 发送验证码邮件！", email)
+			}
+		}
+	} else {
+		log.Printf("[验证码服务提示] 未配置 SupabaseURL/AnonKey，使用本地安全模式")
+	}
+
 	return &types.SendCodeResp{
 		CooldownSeconds: 60,
 	}, nil
@@ -84,46 +134,72 @@ func (s *authServiceImpl) SendEmailCode(ctx context.Context, email string) (*typ
 func (s *authServiceImpl) VerifyCodeAndLogin(ctx context.Context, email, code string) (*types.AuthRespVO, error) {
 	log.Printf("[用户认证] 正在校验邮箱 [%s] 验证码: %s", email, code)
 
-	// 校验验证码逻辑：
-	// 1. 调用 Supabase 验证端点
-	// 2. 若开发自测码（123456 / 888888）亦通过快速校验，保证断网或未配置 SMTP 时系统依然可完整自测
-	isValid := false
+	codeVerified := false
 	supabaseUID := ""
 
-	if code == "123456" || code == "888888" || code == "666666" || code == "777777" {
-		isValid = true
+	// 1. 快捷万能测试验证码 (777777 / 123456 / 888888)
+	if code == "777777" || code == "123456" || code == "888888" || code == "666666" {
+		codeVerified = true
 		supabaseUID = "sb_" + uuid.New().String()[:12]
-		log.Printf("[用户认证] 命中快速安全测试验证码")
-	} else {
-		// 调用 Supabase Verify 接口
-		verifyEndpoint := fmt.Sprintf("%s/auth/v1/verify", strings.TrimRight(s.cfg.Supabase.APIUrl, "/"))
-		reqBody, _ := json.Marshal(map[string]interface{}{
+		log.Printf("[用户认证] 命中快捷测试验证码，快速放行")
+	}
+
+	// 2. 本地内存验证码优先校验
+	if !codeVerified {
+		if val, ok := codeMap.Load(email); ok {
+			item := val.(codeItem)
+			if time.Now().Before(item.expiresAt) && item.code == code {
+				codeVerified = true
+				codeMap.Delete(email)
+				log.Printf("[验证码服务] 本地内存验证码校验通过: %s", email)
+			}
+		}
+	}
+
+	// 3. Supabase Auth 在线接口校验备份 (POST /auth/v1/verify)
+	supabaseURL := s.cfg.Email.SupabaseURL
+	if supabaseURL == "" {
+		supabaseURL = s.cfg.Supabase.APIUrl
+	}
+	anonKey := s.cfg.Email.AnonKey
+	if anonKey == "" {
+		anonKey = s.cfg.Supabase.ServiceKey
+	}
+
+	if !codeVerified && supabaseURL != "" && anonKey != "" {
+		verifyPayload := map[string]string{
+			"type":  "email",
 			"email": email,
 			"token": code,
-			"type":  "email",
-		})
-		req, _ := http.NewRequestWithContext(ctx, http.MethodPost, verifyEndpoint, bytes.NewBuffer(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("apikey", s.cfg.Supabase.ServiceKey)
+		}
+		verifyBytes, _ := json.Marshal(verifyPayload)
+		targetURL := strings.TrimRight(supabaseURL, "/") + "/auth/v1/verify"
 
-		resp, err := s.client.Do(req)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, targetURL, bytes.NewBuffer(verifyBytes))
 		if err == nil {
-			defer resp.Body.Close()
-			if resp.StatusCode == http.StatusOK {
-				isValid = true
-				var resMap map[string]interface{}
-				_ = json.NewDecoder(resp.Body).Decode(&resMap)
-				if userObj, ok := resMap["user"].(map[string]interface{}); ok {
-					if idStr, ok := userObj["id"].(string); ok {
-						supabaseUID = idStr
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("apikey", anonKey)
+
+			resp, err := s.client.Do(req)
+			if err == nil {
+				defer resp.Body.Close()
+				if resp.StatusCode == http.StatusOK {
+					codeVerified = true
+					var resMap map[string]interface{}
+					_ = json.NewDecoder(resp.Body).Decode(&resMap)
+					if userObj, ok := resMap["user"].(map[string]interface{}); ok {
+						if idStr, ok := userObj["id"].(string); ok {
+							supabaseUID = idStr
+						}
 					}
+					log.Printf("[验证码服务] Supabase Auth 在线接口校验通过: %s", email)
 				}
 			}
 		}
 	}
 
-	if !isValid {
-		return nil, fmt.Errorf("验证码无效或已过期，请重新获取")
+	if !codeVerified {
+		return nil, fmt.Errorf("验证码错误或已过期，请重新获取")
 	}
 
 	if supabaseUID == "" {

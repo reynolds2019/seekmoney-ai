@@ -37,7 +37,22 @@ supabase:
   # Supabase JWT 鉴权密钥 (用于验证签名与自解析)
   jwtSecret: "6128de580367207db74b707749b8fb04"
   # 服务端 Service Role Key (或匿名 Anon Key)
-  serviceKey: "f1189f0b2d60e4e1158d28ea565c351c"
+  serviceKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg4MzQxNzIzLCJleHAiOjE5NDYwMjE3MjN9.O07OEku7ss1N_vrmkZX6_xEi2FIQGSWY6ACVzBfwuIU"
+
+# ------------------------------------------------------------------------------
+# 邮件服务配置 (基于 Supabase Auth 发送邮箱验证码)
+# ------------------------------------------------------------------------------
+email:
+  # 是否使用开发环境测试邮件
+  use_inbucket: false
+  # Inbucket API 地址
+  inbucket_url: "http://192.168.8.206:19000"
+  # Supabase API 网关地址
+  supabase_url: "http://192.168.8.206:8000"
+  # Supabase Anon 匿名 API Key (来自生产环境配置)
+  anon_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg4MzQxNzIzLCJleHAiOjE5NDYwMjE3MjN9.O07OEku7ss1N_vrmkZX6_xEi2FIQGSWY6ACVzBfwuIU"
+  # 验证码有效期 (分钟)
+  code_expire_minutes: 5
 
 # ------------------------------------------------------------------------------
 # 3. MinIO 对象存储配置 (S3 兼容)

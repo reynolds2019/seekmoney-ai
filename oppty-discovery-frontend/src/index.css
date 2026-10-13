@@ -126,22 +126,24 @@ body {
 }
 
 /* 输入框通用质感 */
-.input-field {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-card-border);
-  background: #FFFFFF;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--color-text-main);
-  outline: none;
-  transition: all 0.2s ease;
-}
+@layer components {
+  .input-field {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-card-border);
+    background: #FFFFFF;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--color-text-main);
+    outline: none;
+    transition: all 0.2s ease;
+  }
 
-.input-field:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  .input-field:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
 }
 
 /* 卡片基底 */
