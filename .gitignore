@@ -1,6 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
+node_modules/
 /node_modules
 /.pnp
 .pnp.*
@@ -13,12 +14,16 @@
 # testing
 /coverage
 
-# next.js
+# next.js & vite
 /.next/
 /out/
-
-# production
+dist/
+build/
 /build
+
+# binaries
+*.exe
+*.dll
 
 # misc
 .DS_Store

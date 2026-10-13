@@ -1,0 +1,88 @@
+# ==============================================================================
+# 商机发现助手 (Oppty Discovery Assistant) - 后端服务全局配置
+# 所有技术组件均抽取到本配置文件集中管理，便于后续容器化部署与机房迁移
+# ==============================================================================
+
+server:
+  # 服务监听端口
+  port: 8080
+  # 运行模式: debug / release / test
+  mode: "debug"
+  # 应用名称
+  appName: "商机发现助手"
+
+# ------------------------------------------------------------------------------
+# 1. 数据库配置 (PostgreSQL 17)
+# 复用服务器 192.168.8.206 上的 PostgreSQL 17 (AnyDocs-postgres 或 Supabase PG)
+# ------------------------------------------------------------------------------
+database:
+  host: "192.168.8.206"
+  port: 5432
+  user: "postgres"
+  password: "postgres123!@#"
+  # 独立数据库实例名称，按工程命名隔离
+  dbname: "oppty_discovery"
+  sslmode: "disable"
+  maxIdleConns: 10
+  maxOpenConns: 50
+
+# ------------------------------------------------------------------------------
+# 2. Supabase BaaS 平台配置
+# 用于无感邮箱验证码登录 (OTP)、用户会话管理
+# 对应服务器 192.168.8.206 上的 Kong API 网关 (8000) 与 Studio (8000)
+# ------------------------------------------------------------------------------
+supabase:
+  # Supabase Kong API 网关统一访问入口
+  apiUrl: "http://192.168.8.206:8000"
+  # Supabase JWT 鉴权密钥 (用于验证签名与自解析)
+  jwtSecret: "6128de580367207db74b707749b8fb04"
+  # 服务端 Service Role Key (或匿名 Anon Key)
+  serviceKey: "f1189f0b2d60e4e1158d28ea565c351c"
+
+# ------------------------------------------------------------------------------
+# 3. MinIO 对象存储配置 (S3 兼容)
+# 用于持久化存储商机 Markdown 导出报告和 HTML 预览文档
+# 对应服务器 192.168.8.206 上的 minio-server
+# ------------------------------------------------------------------------------
+minio:
+  # S3 API 访问端点 (宿主机 9000 端口)
+  endpoint: "192.168.8.206:9000"
+  # 管理凭证 Access Key
+  accessKey: "admin"
+  # 管理凭证 Secret Key
+  secretKey: "Admin@206"
+  # 是否启用 HTTPS (局域网内使用 false)
+  useSSL: false
+  # 商机发现助手专属存储桶命名
+  bucketName: "oppty-discovery"
+  # 外网/局域网浏览器直接预览的基础 URL
+  publicBaseUrl: "http://192.168.8.206:9000/oppty-discovery"
+
+# ------------------------------------------------------------------------------
+# 4. 大模型 (LLM) 分析引擎配置
+# 接入部署在 192.168.8.206:3002 的 Qwen / GLM 兼容大模型服务
+# ------------------------------------------------------------------------------
+llm:
+  # 模型 API Base URL (兼容 OpenAI / GLM 格式)
+  baseUrl: "http://192.168.8.206:3002/v1"
+  # 调用 API Key
+  apiKey: "sk-b4R1jMvuDD3ySozNK280Bt96kgXAhOUAwiPHrfGLzyBPtucl"
+  # 分析推理模型名称
+  modelName: "qwen3.6-flash"
+  # 生成温度
+  temperature: 0.7
+  # 请求超时时间 (秒)
+  timeoutSeconds: 60
+
+# ------------------------------------------------------------------------------
+# 5. TikHub / 社交媒体爬虫数据源配置
+# ------------------------------------------------------------------------------
+tikhub:
+  # TikHub API 网关地址
+  baseUrl: "https://api.tikhub.io"
+  # TikHub 调用凭证 Token (已配置用户提供的真实 Key)
+  apiToken: "gKVeXOhBwnv1h1+cH4Wznw7rDje+A51fwCvXqmS7C/mHiA6TKlrdQCm4Kw=="
+  # 请求重试次数
+  retryCount: 3
+  # 单次请求超时时间 (秒)
+  timeoutSeconds: 30
