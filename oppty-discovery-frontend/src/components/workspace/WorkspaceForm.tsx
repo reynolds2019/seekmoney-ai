@@ -18,8 +18,8 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
   const [keywords, setKeywords] = useState<string[]>(['AI变现', '自媒体运营']);
   const [inputKeyword, setInputKeyword] = useState('');
   const [deepCrawl, setDeepCrawl] = useState(true);
-  const [maxVideos, setMaxVideos] = useState(10); // 范围 5 - 20
-  const [maxCommentsPerVideo, setMaxCommentsPerVideo] = useState(20); // 范围 10 - 100
+  const [maxVideos, setMaxVideos] = useState(5); // 默认设为最小值 5 (范围 5 - 20)
+  const [maxCommentsPerVideo, setMaxCommentsPerVideo] = useState(10); // 默认设为最小值 10 (范围 10 - 100)
   const [validationError, setValidationError] = useState('');
 
   const keywordInputId = useId();
@@ -109,12 +109,12 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
         </div>
       )}
 
-      {/* 1. 选择数据源 */}
+      {/* 1. 选择数据源：2列3行紧凑网格 */}
       <div>
         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
           1. 目标数据源平台
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {/* TikTok */}
           <button
             type="button"

@@ -244,14 +244,15 @@ export const App: React.FC = () => {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {currentTab === 'workspace' ? (
           <div className="space-y-6">
-            {/* 左右分栏：左侧配置表单，右侧状态感知与分析报告 */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              <div className="lg:col-span-5">
+            {/* 左右分栏：左侧配置表单收窄为 4 列，右侧报告与研读区拓展为 8 列 */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+              <div className="lg:col-span-4">
                 <WorkspaceForm isLoading={isSubmitting} onSubmit={handleSubmitJob} />
               </div>
 
-              <div className="lg:col-span-7 space-y-6">
-                {currentJob && <ProgressCard job={currentJob} />}
+              <div className="lg:col-span-8 space-y-6">
+                {/* 进度感知卡片仅在生成过程中或异常中断时显示，分析完成呈现报告后自动隐藏 */}
+                {currentJob && currentJob.status !== 'completed' && <ProgressCard job={currentJob} />}
 
                 {currentJob && currentJob.results && currentJob.results.length > 0 ? (
                   <ReportView
