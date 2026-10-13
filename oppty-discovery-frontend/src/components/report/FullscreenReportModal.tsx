@@ -17,6 +17,7 @@ import {
   ThumbsUp,
   ExternalLink,
   Check,
+  AlertCircle,
 } from 'lucide-react';
 import { OpptyReportVO } from '../../types';
 
@@ -356,18 +357,28 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
         </section>
 
         {/* 6. 抓取视频与原文链接溯源 */}
-        {report.sourceVideos && report.sourceVideos.length > 0 && (
-          <section className="card-glass p-6 sm:p-8 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Video className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-base font-bold text-gray-900">
-                  原始抓取视频与内容原文链接溯源 ({report.sourceVideos.length})
-                </h2>
-              </div>
-              <span className="text-xs text-gray-400">点击可直接跳转外部平台真实页面</span>
+        <section className="card-glass p-6 sm:p-8 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Video className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-base font-bold text-gray-900">
+                原始抓取视频与内容原文链接溯源 ({report.sourceVideos?.length || 0})
+              </h2>
             </div>
+            <span className="text-xs text-gray-400">客观证据链直达真实页面</span>
+          </div>
 
+          {!report.sourceVideos || report.sourceVideos.length === 0 ? (
+            <div className="p-6 bg-gray-50/80 rounded-xl border border-gray-200/80 text-center space-y-2">
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <p className="text-sm font-bold text-gray-800">无法追溯至原文链接</p>
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
+                当前数据源平台暂未返回可公开直接访问的内容原链或受平台防盗链保护，系统已停止虚假链接降级处理，确保分析依据客观真实。
+              </p>
+            </div>
+          ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
               {report.sourceVideos.map((video, vIdx) => (
                 <div
@@ -389,21 +400,27 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
                   </div>
 
                   <div className="pt-2 border-t border-gray-100/80 flex items-center justify-end">
-                    <a
-                      href={video.videoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition"
-                    >
-                      <span>访问原文</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                    {video.videoUrl ? (
+                      <a
+                        href={video.videoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition"
+                      >
+                        <span>访问原文</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg">
+                        无法追溯至原文链接
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </main>
     </div>
   );

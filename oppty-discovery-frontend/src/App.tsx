@@ -7,11 +7,13 @@ import { ReportView } from './components/report/ReportView';
 import { FullscreenReportModal } from './components/report/FullscreenReportModal';
 import { HistoryView } from './components/history/HistoryView';
 import { AboutView } from './components/about/AboutView';
+import { useAuth } from './context/AuthContext';
 import { opptyApi } from './api/client';
 import { OpptyJobDetailVO, OpptyReportVO, DataSourceType } from './types';
 import { ShieldCheck, Zap, Radar, ArrowLeft } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const { isAuthenticated, openLoginModal } = useAuth();
   const isAboutPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'about';
   const shareJobId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('share') : null;
 
@@ -23,6 +25,9 @@ export const App: React.FC = () => {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const pollTimerRef = useRef<number | null>(null);
+
+  // 任务是否在执行中锁定：正在提交中或后端返回 processing 状态中
+  const isTaskWorking = isSubmitting || (currentJob !== null && currentJob.status === 'processing');
 
   // 若处于公开分享直达模式，免登录拉取报告
   useEffect(() => {
@@ -84,6 +89,12 @@ export const App: React.FC = () => {
     maxVideos: number;
     maxCommentsPerVideo: number;
   }) => {
+    // 未登录用户进行拦截，弹出精简登录弹窗
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
+
     setIsSubmitting(true);
     setCurrentJob(null);
     try {
@@ -93,6 +104,15 @@ export const App: React.FC = () => {
       alert(err.message || '创建任务失败，请检查服务状态');
       setIsSubmitting(false);
     }
+  };
+
+  // 选项卡切换处理（未登录拦截历史记录查看）
+  const handleTabChange = (tab: 'workspace' | 'history') => {
+    if (tab === 'history' && !isAuthenticated) {
+      openLoginModal();
+      return;
+    }
+    setCurrentTab(tab);
   };
 
   // 从历史记录中选择查看某份商机报告
@@ -237,8 +257,8 @@ export const App: React.FC = () => {
       {/* 背景柔和氛围光晕 */}
       <div className="bg-ambient" />
 
-      {/* 顶部导航 */}
-      <Navbar currentTab={currentTab} onTabChange={setCurrentTab} />
+      {/* 顶部导航（支持未登录拦截） */}
+      <Navbar currentTab={currentTab} onTabChange={handleTabChange} />
 
       {/* 主体工作区容器 */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -247,7 +267,7 @@ export const App: React.FC = () => {
             {/* 左右分栏：左侧配置表单收窄为 4 列，右侧报告与研读区拓展为 8 列 */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
               <div className="lg:col-span-4">
-                <WorkspaceForm isLoading={isSubmitting} onSubmit={handleSubmitJob} />
+                <WorkspaceForm isLoading={isTaskWorking} onSubmit={handleSubmitJob} />
               </div>
 
               <div className="lg:col-span-8 space-y-6">

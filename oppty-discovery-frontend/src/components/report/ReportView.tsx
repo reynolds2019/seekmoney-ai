@@ -13,6 +13,7 @@ import {
   Video,
   ThumbsUp,
   Check,
+  AlertCircle,
 } from 'lucide-react';
 import { OpptyReportVO, VideoItemVO } from '../../types';
 
@@ -299,40 +300,64 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
-              {(
-                (selectedVideosReport.sourceVideos && selectedVideosReport.sourceVideos.length > 0
-                  ? selectedVideosReport.sourceVideos
-                  : sourceVideos) || []
-              ).map((video, vIdx) => (
-                <div
-                  key={vIdx}
-                  className="p-3.5 bg-gray-50 border border-gray-200/80 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-indigo-50/30 hover:border-indigo-200 transition"
-                >
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <div className="font-bold text-gray-900 leading-snug line-clamp-2">
-                      {video.title}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
-                      <span>发布者: <b className="text-gray-700">{video.author}</b></span>
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="w-3 h-3 text-amber-500" />
-                        {video.likes}
-                      </span>
-                      {video.createdAt && <span>时间: {video.createdAt}</span>}
-                    </div>
-                  </div>
+              {(() => {
+                const currentModalVideos = (
+                  selectedVideosReport.sourceVideos && selectedVideosReport.sourceVideos.length > 0
+                    ? selectedVideosReport.sourceVideos
+                    : sourceVideos
+                ) || [];
 
-                  <a
-                    href={video.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-primary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-center"
+                if (currentModalVideos.length === 0) {
+                  return (
+                    <div className="py-8 px-4 text-center space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+                        <AlertCircle className="w-5 h-5" />
+                      </div>
+                      <p className="text-sm font-bold text-gray-800">无法追溯至原文链接</p>
+                      <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                        当前数据源平台暂未返回可公开直接访问的内容原链或受平台防盗链保护，系统已停止虚假链接降级处理，确保分析依据客观真实。
+                      </p>
+                    </div>
+                  );
+                }
+
+                return currentModalVideos.map((video, vIdx) => (
+                  <div
+                    key={vIdx}
+                    className="p-3.5 bg-gray-50 border border-gray-200/80 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-indigo-50/30 hover:border-indigo-200 transition"
                   >
-                    <span>跳转原文</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              ))}
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="font-bold text-gray-900 leading-snug line-clamp-2">
+                        {video.title}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
+                        <span>发布者: <b className="text-gray-700">{video.author}</b></span>
+                        <span className="flex items-center gap-1">
+                          <ThumbsUp className="w-3 h-3 text-amber-500" />
+                          {video.likes}
+                        </span>
+                        {video.createdAt && <span>时间: {video.createdAt}</span>}
+                      </div>
+                    </div>
+
+                    {video.videoUrl ? (
+                      <a
+                        href={video.videoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-primary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-center"
+                      >
+                        <span>跳转原文</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-lg shrink-0 self-start sm:self-center">
+                        无法追溯至原文链接
+                      </span>
+                    )}
+                  </div>
+                ));
+              })()}
             </div>
 
             <div className="pt-3 border-t border-gray-200 flex justify-between items-center text-xs text-gray-500">

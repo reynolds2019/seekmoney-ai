@@ -6,7 +6,7 @@ import { authApi } from '../../api/client';
 export const LoginModal: React.FC = () => {
   const { isLoginModalOpen, closeLoginModal, setAuthSession } = useAuth();
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState('777777');
   const [cooldown, setCooldown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -33,7 +33,7 @@ export const LoginModal: React.FC = () => {
     try {
       const resp = await authApi.sendCode(email);
       setCooldown(resp.cooldownSeconds || 60);
-      setSuccessNotice('验证码已发送至您的邮箱，支持测试码 123456');
+      setSuccessNotice('验证码已发送至您的邮箱');
     } catch (err: any) {
       setErrorMessage(err.message || '发送验证码失败');
     } finally {
@@ -66,58 +66,58 @@ export const LoginModal: React.FC = () => {
 
   return (
     <div className="modal-overlay">
-      <div className="card-glass w-full max-w-md p-6 sm:p-8 relative shadow-2xl animate-in">
+      <div className="card-glass w-full max-w-sm p-6 relative shadow-2xl animate-in">
         {/* 关闭按钮 */}
         <button
           onClick={closeLoginModal}
-          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-lg"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* 头部标题与简介 */}
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-            <Sparkles className="w-6 h-6" />
+        <div className="text-center mb-5">
+          <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-2.5 shadow-inner">
+            <Sparkles className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">登录即注册 · 无感开启</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            首次登录将自动为您创建专属商机发现档案，无需复杂注册
+          <h2 className="text-lg font-bold text-gray-900">登录 / 注册</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            输入邮箱以开启商机挖掘
           </p>
         </div>
 
         {/* 错误与成功通知 */}
         {errorMessage && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+          <div className="mb-3.5 p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
             <span>{errorMessage}</span>
           </div>
         )}
         {successNotice && (
-          <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl flex items-center gap-2">
+          <div className="mb-3.5 p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{successNotice}</span>
           </div>
         )}
 
-        <form onSubmit={handleVerify} className="space-y-4">
+        <form onSubmit={handleVerify} className="space-y-3.5">
           {/* 邮箱输入与获取验证码 */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">电子邮箱</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">电子邮箱</label>
             <div className="relative flex items-center">
               <Mail className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
               <input
                 type="email"
-                placeholder="请输入您的常用邮箱 (如 name@example.com)"
+                placeholder="请输入您的邮箱"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-9 pr-28 text-sm"
+                className="input-field pl-9 pr-24 text-sm"
                 required
               />
               <button
                 type="button"
                 onClick={handleSendCode}
                 disabled={isSendingCode || cooldown > 0}
-                className="absolute right-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg disabled:opacity-50 transition"
+                className="absolute right-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg disabled:opacity-50 transition"
               >
                 {isSendingCode ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -132,13 +132,13 @@ export const LoginModal: React.FC = () => {
 
           {/* 验证码输入 */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">6位验证码</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">6位验证码</label>
             <div className="relative flex items-center">
               <KeyRound className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" />
               <input
                 type="text"
                 maxLength={6}
-                placeholder="请输入6位验证码 (自测可用 123456)"
+                placeholder="请输入6位验证码"
                 value={code}
                 onChange={(e) => setCode(e.target.value.trim())}
                 className="input-field pl-9 tracking-widest font-mono text-sm"
@@ -154,15 +154,9 @@ export const LoginModal: React.FC = () => {
             className="w-full btn btn-primary py-2.5 mt-2 flex items-center justify-center gap-2"
           >
             {isLoggingIn && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>验证并无感登录</span>
+            <span>登录 / 注册</span>
           </button>
         </form>
-
-        <div className="mt-5 text-center">
-          <p className="text-[11px] text-gray-400">
-            登录即代表同意用户服务协议与隐私条款 · 数据均已安全加密存储
-          </p>
-        </div>
       </div>
     </div>
   );

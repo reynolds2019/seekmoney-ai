@@ -274,48 +274,9 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 		}
 	}
 
-	// 4. 依据不同数据源生成对应平台的视频/原文链接
-	if len(rawVideos) == 0 {
-		for i := 0; i < req.MaxVideos; i++ {
-			var videoURL, authorName, title string
-			likes := fmt.Sprintf("%d", (i+1)*280+95)
-
-			switch constant.DataSourceType(req.DataSource) {
-			case constant.DataSourceXiaohongshu:
-				videoURL = fmt.Sprintf("https://www.xiaohongshu.com/explore/note_%s_%d", strings.ReplaceAll(keywordStr, " ", "_"), i+1)
-				authorName = fmt.Sprintf("红书达人_%d", i+1)
-				title = fmt.Sprintf("【爆款拆解】%s避坑指南与搞钱新思路", keywordStr)
-			case constant.DataSourceBilibili:
-				videoURL = fmt.Sprintf("https://www.bilibili.com/video/BV1%s%04d", strings.ToUpper(strings.ReplaceAll(keywordStr, " ", "")), i+1)
-				authorName = fmt.Sprintf("B站技术UP主_%d", i+1)
-				title = fmt.Sprintf("深度硬核拆解：%s真的能落地变现吗？实测跑通全流程", keywordStr)
-			case constant.DataSourceWechat:
-				videoURL = fmt.Sprintf("https://channels.weixin.qq.com/feed/post_%d_%s", i+1, strings.ReplaceAll(keywordStr, " ", "_"))
-				authorName = fmt.Sprintf("视频号商业观察_%d", i+1)
-				title = fmt.Sprintf("普通人如何借助%s实现轻资产副业破局？", keywordStr)
-			case constant.DataSourceYoutube:
-				videoURL = fmt.Sprintf("https://www.youtube.com/watch?v=oppty_%s_%d", strings.ReplaceAll(keywordStr, " ", "_"), i+1)
-				authorName = fmt.Sprintf("GlobalCreator_%d", i+1)
-				title = fmt.Sprintf("How I Built a Profitable Business Around %s in 30 Days", keywordStr)
-			case constant.DataSourceDouyin:
-				videoURL = fmt.Sprintf("https://www.douyin.com/video/73%08d", i+1000)
-				authorName = fmt.Sprintf("抖音创作者_%d", i+1)
-				title = fmt.Sprintf("2026最新实战：%s从零到一实操拆解", keywordStr)
-			default:
-				videoURL = fmt.Sprintf("https://www.tiktok.com/@creator_%d/video/73%08d", i+1, i+1000)
-				authorName = fmt.Sprintf("TikTokCreator_%d", i+1)
-				title = fmt.Sprintf("Viral Guide: How to scale %s from scratch", keywordStr)
-			}
-
-			rawVideos = append(rawVideos, map[string]interface{}{
-				"title":         title,
-				"author":        authorName,
-				"likes":         likes,
-				"video_url":     videoURL,
-				"comment_count": 50 + i*10,
-				"created_at":    time.Now().Format("2006-01-02 15:04:05"),
-			})
-		}
+	// 4. 若无法获取原始视频链接，不做伪造降级处理，保持客观真实
+	if rawVideos == nil {
+		rawVideos = []map[string]interface{}{}
 	}
 
 	log.Printf("[抓取管线就绪] 共汇总 %d 条视频/原文及 %d 条核心原声评论待分析", len(rawVideos), len(rawComments))

@@ -1,5 +1,5 @@
 import React, { useState, useId } from 'react';
-import { Sparkles, Sliders, MessageSquare, Video, Info, Tag, Plus, X, Globe2, AlertCircle, Heart, Tv, Youtube, MessageCircle } from 'lucide-react';
+import { Sparkles, Sliders, MessageSquare, Video, Info, Tag, Plus, X, Globe2, AlertCircle, Heart, Tv, Youtube, MessageCircle, Loader2 } from 'lucide-react';
 import { DataSourceType } from '../../types';
 
 interface WorkspaceFormProps {
@@ -378,10 +378,19 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
       <button
         type="submit"
         disabled={isLoading || keywords.length === 0}
-        className="w-full btn btn-primary py-3.5 text-sm sm:text-base shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group"
+        className="w-full btn btn-primary py-3.5 text-sm sm:text-base shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed transition-all"
       >
-        <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-        <span>立即寻找商机</span>
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin text-white" />
+            <span>商机雷达挖掘中...</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            <span>立即寻找商机</span>
+          </>
+        )}
       </button>
     </form>
   );

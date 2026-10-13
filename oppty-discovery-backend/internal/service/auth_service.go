@@ -90,7 +90,7 @@ func (s *authServiceImpl) VerifyCodeAndLogin(ctx context.Context, email, code st
 	isValid := false
 	supabaseUID := ""
 
-	if code == "123456" || code == "888888" || code == "666666" {
+	if code == "123456" || code == "888888" || code == "666666" || code == "777777" {
 		isValid = true
 		supabaseUID = "sb_" + uuid.New().String()[:12]
 		log.Printf("[用户认证] 命中快速安全测试验证码")
