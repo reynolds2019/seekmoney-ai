@@ -1,6 +1,6 @@
 # 商机发现助手 (Oppty Discovery Assistant) 工程架构与目录结构手册
 
-> **文档版本**：v1.0.1  
+> **文档版本**：v1.0.3  
 > **更新日期**：2026-10-13  
 > **归档位置**：`docs/07_project_architecture.md`  
 > **工程标识**：`oppty-discovery`
@@ -11,6 +11,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **v1.0.0** | 2026-10-13 | 初始基线 | 初始工程架构手册创建，梳理前后端工程结构与外部组件集成机制 | reynolds |
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. 扩充后端架构：新增 `internal/service/tikhub_client.go` 及单测，正式接入 TikHub RESTful 采集客户端与降级管道；<br>2. 扩充前端架构：补充本地 PostCSS 插件闭环隔离说明（规避父级 Monorepo 配置污染）。 | reynolds |
+| **v1.0.2** | 2026-10-13 | 功能级变更 (A1) | 1. 扩充前端架构：新增 `src/components/about/AboutView.tsx` 独立产品介绍组件；<br>2. 首页空间重构：移除中央 Slogan，工作台表单长说明精简为 Tooltip 气泡；<br>3. 前后端加载与报告文案去 AI 化、去技术化。 | reynolds |
+| **v1.0.3** | 2026-10-13 | 功能级变更 (A1) | 1. 前端导航架构优化：顶栏中央回归为纯双业务 Tab（商机发现与商机历史）；<br>2. 产品介绍解耦为独立外部链接并采用新标签页全屏展示架构。 | reynolds |
 
 ---
 
@@ -134,6 +136,8 @@ oppty-discovery-frontend/
 │   │   └── client.ts                   # 统一 HTTP 网络服务客户端（带 Authorization 拦截与类型推导）
 │   ├── assets/                         # 图标与多媒体资源
 │   ├── components/                     # 高内聚通用业务展示与交互组件
+│   │   ├── about/
+│   │   │   └── AboutView.tsx           # 独立产品介绍视图（系统呈现Slogan、三大核心能力、三步使用指引与安全背书）
 │   │   ├── auth/
 │   │   │   └── LoginModal.tsx          # 登录即注册无感弹窗（60s倒计时、自测码支持、首次建档提示）
 │   │   ├── layout/

@@ -115,7 +115,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ reports, onOpenFullscree
                   <div className="mb-4">
                     <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                       <Target className="w-3 h-3 text-indigo-500" />
-                      MVP 核心功能路线
+                      首期必备功能
                     </div>
                     <ul className="space-y-1">
                       {report.mvpPlan.core_features.slice(0, 3).map((feat: string, fIdx: number) => (

@@ -6,11 +6,13 @@ import { ProgressCard } from './components/workspace/ProgressCard';
 import { ReportView } from './components/report/ReportView';
 import { FullscreenReportModal } from './components/report/FullscreenReportModal';
 import { HistoryView } from './components/history/HistoryView';
+import { AboutView } from './components/about/AboutView';
 import { opptyApi } from './api/client';
 import { OpptyJobDetailVO, OpptyReportVO, DataSourceType } from './types';
-import { Sparkles, ShieldCheck, Zap } from 'lucide-react';
+import { ShieldCheck, Zap, Radar, ArrowLeft } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const isAboutPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'about';
   const [currentTab, setCurrentTab] = useState<'workspace' | 'history'>('workspace');
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [currentJob, setCurrentJob] = useState<OpptyJobDetailVO | null>(null);
@@ -75,6 +77,53 @@ export const App: React.FC = () => {
     setCurrentTab('workspace');
   };
 
+  // 针对 ?view=about 参数，作为独立新标签页全屏渲染展示
+  if (isAboutPage) {
+    return (
+      <div className="min-h-screen flex flex-col relative bg-white">
+        <div className="bg-ambient" />
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => (window.location.href = window.location.pathname)}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                <Radar className="w-5 h-5 animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-lg text-gray-900 tracking-tight">商机发现助手</span>
+                <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                  产品介绍
+                </span>
+              </div>
+            </div>
+            <a
+              href={window.location.pathname}
+              className="btn btn-primary text-xs py-2 px-4 flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>进入工作台</span>
+            </a>
+          </div>
+        </header>
+
+        <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+          <AboutView onStartDiscovery={() => (window.location.href = window.location.pathname)} />
+        </main>
+
+        <footer className="py-6 border-t border-gray-200 bg-white/50 text-center text-xs text-gray-400 space-y-1">
+          <p className="font-semibold text-gray-600">
+            商机发现助手 (Oppty Discovery Assistant) · 痛点一键透视，商机即刻成型
+          </p>
+          <p className="text-[11px]">
+            From pain point to profit in seconds. © 2026 All rights reserved.
+          </p>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* 背景柔和氛围光晕 */}
@@ -84,23 +133,9 @@ export const App: React.FC = () => {
       <Navbar currentTab={currentTab} onTabChange={setCurrentTab} />
 
       {/* 主体工作区容器 */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {currentTab === 'workspace' ? (
-          <div className="space-y-8">
-            {/* Slogan 标语横幅 */}
-            <div className="text-center max-w-3xl mx-auto space-y-2 mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-semibold mb-1 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>智能商机雷达 · 深度评论挖掘</span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                痛点一键透视，商机即刻成型
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                一款集“社区评论挖掘、痛点线索提炼与商业方案构思”于一体的智能商机雷达。帮助创业者在几秒内从海量社交原声中锁定真正值得做的爆款方向。
-              </p>
-            </div>
-
+          <div className="space-y-6">
             {/* 左右分栏：左侧配置表单，右侧状态感知与分析报告 */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-5">
@@ -123,7 +158,7 @@ export const App: React.FC = () => {
                     <div>
                       <h3 className="text-base font-bold text-gray-800">等待启动商机雷达</h3>
                       <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                        在左侧选择数据源并设定关键词，点击“开始智能分析”即可在此实时查看多维商业报告与全屏研读。
+                        在左侧选择数据源并设定关键词，点击“开始寻找商机”即可在此实时查看多维商业报告与全屏研读。
                       </p>
                     </div>
                     <div className="flex justify-center gap-4 text-[11px] text-gray-500 pt-2">
@@ -131,7 +166,7 @@ export const App: React.FC = () => {
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> 真实社群原声
                       </span>
                       <span className="flex items-center gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5 text-blue-500" /> 语义密度聚类
+                        <ShieldCheck className="w-3.5 h-3.5 text-blue-500" /> 智能商业提炼
                       </span>
                       <span className="flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" /> 全屏沉浸研读

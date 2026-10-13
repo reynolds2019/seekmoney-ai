@@ -77,16 +77,28 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
 
   return (
     <form onSubmit={handleSubmit} className="card-glass p-5 sm:p-7 space-y-6">
-      {/* 头部标题与简介 */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-blue-600" />
+      {/* 头部标题与简洁Tooltip帮助 */}
+      <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <Sliders className="w-5 h-5 text-blue-600" />
+          <h2 className="text-base sm:text-lg font-bold text-gray-900">
             商机透视雷达配置
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            设定挖掘数据源与抓取规模，系统将实时计算预估成本并启动异步洞察
-          </p>
+          {/* 帮助悬浮解释气泡 Tooltip */}
+          <div className="relative group inline-flex items-center">
+            <button
+              type="button"
+              className="w-5 h-5 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-400 hover:text-blue-600 flex items-center justify-center text-xs font-bold transition-colors cursor-help"
+              aria-label="查看配置说明"
+            >
+              ?
+            </button>
+            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:flex flex-col w-64 p-2.5 bg-gray-900/95 text-white text-xs rounded-xl shadow-xl backdrop-blur-sm z-30 pointer-events-none leading-relaxed transition-all">
+              <span>设定挖掘数据源与抓取规模，系统将实时计算预估成本并启动异步洞察。</span>
+              <span className="text-[10px] text-gray-400 mt-1">支持按需调整抓取视频条数与评论深度。</span>
+              <div className="absolute left-2.5 top-full w-2 h-2 bg-gray-900/95 rotate-45 -mt-1" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -291,7 +303,7 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
         className="w-full btn btn-primary py-3.5 text-sm sm:text-base shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group"
       >
         <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-        <span>开始智能分析</span>
+        <span>立即寻找商机</span>
       </button>
     </form>
   );

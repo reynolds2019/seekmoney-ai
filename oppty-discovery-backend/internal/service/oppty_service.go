@@ -109,7 +109,7 @@ func (s *opptyServiceImpl) runAnalysisPipeline(jobID string, userID uint64, req 
 	ctx := context.Background()
 
 	// 阶段 1: 数据抓取 (crawling)
-	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageCrawling), "正在全网抓取社交媒体原声视频文案与真实评论...", 25, "")
+	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageCrawling), "正在采集社交媒体原声视频与真实用户反馈...", 25, "")
 	time.Sleep(1 * time.Second)
 
 	rawVideos, rawComments, err := s.fetchSocialData(ctx, req)
@@ -131,14 +131,14 @@ func (s *opptyServiceImpl) runAnalysisPipeline(jobID string, userID uint64, req 
 		RawComments:  string(commentsJSON),
 	})
 
-	// 阶段 2: 语义密度聚类分析 (clustering)
-	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageClustering), "正在进行自然语言清洗与痛点语义密度聚类分析...", 55, "")
+	// 阶段 2: 痛点聚合分析 (clustering)
+	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageClustering), "正在归类用户高频吐槽与核心痛点...", 55, "")
 	time.Sleep(1 * time.Second)
 
 	clusters := s.clusterTexts(rawComments, req.Keywords)
 
-	// 阶段 3: 大模型深度商业洞察提炼 (analyzing)
-	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageAnalyzing), "大模型 (Qwen) 正在深度提炼商业闭环、痛点根因与MVP方案...", 75, "")
+	// 阶段 3: 商业机会与方案提炼 (analyzing)
+	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageAnalyzing), "正在深度提炼商业机会、切入点与启动方案...", 75, "")
 
 	var generatedReports []model.OpptyReport
 	for idx, cluster := range clusters {

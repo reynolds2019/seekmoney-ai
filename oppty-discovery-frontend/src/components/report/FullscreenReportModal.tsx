@@ -240,17 +240,17 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
           </div>
         </section>
 
-        {/* 4. MVP 执行落地方案 */}
+        {/* 4. 快速验证与启动方案 */}
         <section className="card-glass p-6 sm:p-8 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
             <Target className="w-5 h-5 text-blue-600" />
-            <h2 className="text-base font-bold text-gray-900">MVP 商业化落地执行路径</h2>
+            <h2 className="text-base font-bold text-gray-900">快速验证与启动方案</h2>
           </div>
 
           {/* 核心功能 */}
           <div>
             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">
-              建议核心功能矩阵
+              首期必备功能清单
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {mvpPlan?.core_features?.map((feat, i) => (

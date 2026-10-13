@@ -1,6 +1,6 @@
 # 功能与接口映射关系文档 (Feature-API Mapping)
 
-> **文档版本**：v1.0.1  
+> **文档版本**：v1.0.3  
 > **关联文档**：`docs/02_features.md`, `docs/03_data_model.md`, `docs/04_api_spec.md`  
 > **状态**：已基线化 / 增量变更同步完成  
 > **工程标识**：`oppty-discovery`
@@ -11,6 +11,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **v1.0.0** | 2026-10-13 | 初始基线 | 初始四向可追溯性映射矩阵建立，覆盖全部 24 个功能项 | reynolds |
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. `FEAT-OPPTY-07`：细化 TikHubClient 外部 RESTful 调用端点与高可用容错机制；<br>2. `FEAT-SYS-04`：记录前端 Vite 本地 PostCSS 隔离配置与 TailwindCSS 样式编译闭环映射。 | reynolds |
+| **v1.0.2** | 2026-10-13 | 功能级变更 (A1) | 1. `FEAT-ABOUT-01`：新增独立产品介绍页面组件映射与导航联动；<br>2. 优化 `FEAT-OPPTY-04` / `FEAT-OPPTY-06`：去技术化与 Tooltip 问号组件映射。 | reynolds |
+| **v1.0.3** | 2026-10-13 | 功能级变更 (A1) | 1. `FEAT-ABOUT-01`：更新为顶部右侧外部超链接 (`target="_blank" href="?view=about"`)，在新标签页全屏独立渲染，主导航恢复纯双业务 Tab。 | reynolds |
 
 ---
 
@@ -18,6 +20,7 @@
 
 | 功能 ID | 功能名称 | 前端组件 / 页面 | 后端 API 路径与 Method | 涉及数据表 / 实体 | 状态与覆盖校验 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
+| **FEAT-ABOUT-01** | 独立产品介绍页面 | `src/components/about/AboutView.tsx`<br>`src/components/layout/Navbar.tsx` (外链) | 前端 URL 参数 `?view=about` 路由切换 | 静态全屏展示与导流 | 已完全覆盖 (100%) |
 | **FEAT-AUTH-01** | 邮箱验证码发送 (OTP) | `src/pages/login/LoginPage.tsx`<br>`src/components/auth/SendCodeButton.tsx` | `POST /api/v1/auth/send-code` | Supabase Auth API / 邮件代理 | 已完全覆盖 (100%) |
 | **FEAT-AUTH-02** | 验证码校验与无感注册 | `src/pages/login/LoginPage.tsx`<br>`src/components/auth/LoginForm.tsx` | `POST /api/v1/auth/verify-code` | `t_user` (`model.User`) | 已完全覆盖 (100%) |
 | **FEAT-AUTH-03** | 会话保持与注销 | `src/components/layout/Navbar.tsx`<br>`src/context/AuthContext.tsx` | `POST /api/v1/auth/logout` | 本地存储 + Supabase Session | 已完全覆盖 (100%) |
