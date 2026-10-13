@@ -77,4 +77,4 @@ lib/crawlers/douyin_new/data/
 /douyin-app-doc
 /analysis-results
 .env.production
-PROMPT.md
+.agents/**
