@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"oppty-discovery-backend/internal/config"
+	"oppty-discovery-backend/internal/constant"
 	"oppty-discovery-backend/internal/prompts"
 	"oppty-discovery-backend/internal/service"
 )
@@ -66,4 +67,28 @@ func TestBuildClusterAnalysisPrompt(t *testing.T) {
 			t.Errorf("提示词中未包含 mvp_plan 维度")
 		}
 	})
+}
+
+// 测试六大数据源枚举及中文描述
+func TestDataSourceTypeDesc(t *testing.T) {
+	testCases := []struct {
+		source constant.DataSourceType
+		expect string
+	}{
+		{constant.DataSourceTikTok, "TikTok 国际版"},
+		{constant.DataSourceDouyin, "抖音短视频"},
+		{constant.DataSourceXiaohongshu, "小红书"},
+		{constant.DataSourceBilibili, "Bilibili"},
+		{constant.DataSourceWechat, "微信视频号"},
+		{constant.DataSourceYoutube, "YouTube"},
+	}
+
+	for _, tc := range testCases {
+		t.Run("验证数据源_"+string(tc.source), func(t *testing.T) {
+			desc := tc.source.Desc()
+			if desc != tc.expect {
+				t.Errorf("数据源 %s 描述错误，期望 %s，实际为 %s", tc.source, tc.expect, desc)
+			}
+		})
+	}
 }

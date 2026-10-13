@@ -13,16 +13,40 @@ import { ShieldCheck, Zap, Radar, ArrowLeft } from 'lucide-react';
 
 export const App: React.FC = () => {
   const isAboutPage = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'about';
+  const shareJobId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('share') : null;
+
   const [currentTab, setCurrentTab] = useState<'workspace' | 'history'>('workspace');
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [currentJob, setCurrentJob] = useState<OpptyJobDetailVO | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fullscreenReport, setFullscreenReport] = useState<OpptyReportVO | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   const pollTimerRef = useRef<number | null>(null);
+
+  // 若处于公开分享直达模式，免登录拉取报告
+  useEffect(() => {
+    if (!shareJobId) return;
+
+    const fetchShareReport = async () => {
+      setShareLoading(true);
+      setShareError(null);
+      try {
+        const detail = await opptyApi.getShareJobDetail(shareJobId);
+        setCurrentJob(detail);
+      } catch (err: any) {
+        setShareError(err.message || '获取分享商机报告失败，该链接可能已失效');
+      } finally {
+        setShareLoading(false);
+      }
+    };
+
+    fetchShareReport();
+  }, [shareJobId]);
 
   // 轮询当前任务状态
   useEffect(() => {
-    if (!currentJobId) return;
+    if (!currentJobId || shareJobId) return;
 
     const fetchStatus = async () => {
       try {
@@ -50,7 +74,7 @@ export const App: React.FC = () => {
         pollTimerRef.current = null;
       }
     };
-  }, [currentJobId]);
+  }, [currentJobId, shareJobId]);
 
   // 处理提交智能分析
   const handleSubmitJob = async (params: {
@@ -124,6 +148,90 @@ export const App: React.FC = () => {
     );
   }
 
+  // 针对 ?share=:jobId 参数，作为免登录公开分享直达视图全屏研读展示
+  if (shareJobId) {
+    return (
+      <div className="min-h-screen flex flex-col relative bg-slate-50">
+        <div className="bg-ambient" />
+
+        {/* 分享专属顶栏 */}
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => (window.location.href = window.location.pathname)}
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                <Radar className="w-5 h-5 animate-pulse" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base text-gray-900 tracking-tight">商机发现助手</span>
+                <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  公开分享只读模式
+                </span>
+              </div>
+            </div>
+
+            <a
+              href={window.location.pathname}
+              className="btn btn-primary text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm"
+            >
+              <span>体验自己的商机挖掘</span>
+            </a>
+          </div>
+        </header>
+
+        {/* 分享内容主体展示 */}
+        <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+          {shareLoading ? (
+            <div className="card-glass p-12 text-center text-gray-400 space-y-3">
+              <div className="w-10 h-10 rounded-full border-2 border-blue-600 border-t-transparent animate-spin mx-auto" />
+              <p className="text-sm font-medium text-gray-600">正在免登录加载商机透视报告，请稍候...</p>
+            </div>
+          ) : shareError ? (
+            <div className="card-glass p-12 text-center text-red-600 space-y-3 border-red-200">
+              <p className="text-sm font-bold">{shareError}</p>
+              <a href={window.location.pathname} className="btn btn-secondary text-xs inline-block">
+                返回工作台
+              </a>
+            </div>
+          ) : currentJob && currentJob.results && currentJob.results.length > 0 ? (
+            <div className="space-y-6">
+              <ReportView
+                reports={currentJob.results}
+                jobId={currentJob.jobId}
+                sourceVideos={currentJob.sourceVideos}
+                onOpenFullscreen={(rep) => setFullscreenReport(rep)}
+              />
+            </div>
+          ) : (
+            <div className="card-glass p-12 text-center text-gray-400">
+              <p className="text-sm">该商机分析仍在进行中或尚未生成有效透视结果</p>
+            </div>
+          )}
+        </main>
+
+        {fullscreenReport && (
+          <FullscreenReportModal
+            report={fullscreenReport}
+            jobId={currentJob?.jobId}
+            onClose={() => setFullscreenReport(null)}
+          />
+        )}
+
+        <footer className="py-6 border-t border-gray-200 bg-white/50 text-center text-xs text-gray-400 space-y-1">
+          <p className="font-semibold text-gray-600">
+            商机发现助手 (Oppty Discovery Assistant) · 痛点一键透视，商机即刻成型
+          </p>
+          <p className="text-[11px]">
+            From pain point to profit in seconds. © 2026 All rights reserved.
+          </p>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* 背景柔和氛围光晕 */}
@@ -148,6 +256,8 @@ export const App: React.FC = () => {
                 {currentJob && currentJob.results && currentJob.results.length > 0 ? (
                   <ReportView
                     reports={currentJob.results}
+                    jobId={currentJob.jobId}
+                    sourceVideos={currentJob.sourceVideos}
                     onOpenFullscreen={(rep) => setFullscreenReport(rep)}
                   />
                 ) : !currentJob ? (
@@ -186,6 +296,7 @@ export const App: React.FC = () => {
       {fullscreenReport && (
         <FullscreenReportModal
           report={fullscreenReport}
+          jobId={currentJob?.jobId}
           onClose={() => setFullscreenReport(null)}
         />
       )}

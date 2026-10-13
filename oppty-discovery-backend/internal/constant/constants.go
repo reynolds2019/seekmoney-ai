@@ -11,8 +11,12 @@ package constant
 type DataSourceType string
 
 const (
-	DataSourceTikTok DataSourceType = "tiktok" // TikTok 国际版数据源
-	DataSourceDouyin DataSourceType = "douyin" // 抖音国内版数据源
+	DataSourceTikTok     DataSourceType = "tiktok"     // TikTok 国际版数据源
+	DataSourceDouyin     DataSourceType = "douyin"     // 抖音国内短视频数据源
+	DataSourceXiaohongshu DataSourceType = "xiaohongshu" // 小红书种草生活方式数据源
+	DataSourceBilibili   DataSourceType = "bilibili"   // Bilibili 哔哩哔哩长短视频数据源
+	DataSourceWechat     DataSourceType = "wechat"     // 微信视频号社交圈层数据源
+	DataSourceYoutube    DataSourceType = "youtube"    // YouTube 全球视频数据源
 )
 
 // 获取数据源中文说明
@@ -22,6 +26,14 @@ func (d DataSourceType) Desc() string {
 		return "TikTok 国际版"
 	case DataSourceDouyin:
 		return "抖音短视频"
+	case DataSourceXiaohongshu:
+		return "小红书"
+	case DataSourceBilibili:
+		return "Bilibili"
+	case DataSourceWechat:
+		return "微信视频号"
+	case DataSourceYoutube:
+		return "YouTube"
 	default:
 		return "未知数据源"
 	}

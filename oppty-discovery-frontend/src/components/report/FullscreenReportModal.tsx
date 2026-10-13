@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   Sparkles,
@@ -12,15 +12,23 @@ import {
   Clock,
   Coins,
   MessageSquare,
+  Share2,
+  Video,
+  ThumbsUp,
+  ExternalLink,
+  Check,
 } from 'lucide-react';
 import { OpptyReportVO } from '../../types';
 
 interface FullscreenReportModalProps {
   report: OpptyReportVO | null;
+  jobId?: string;
   onClose: () => void;
 }
 
-export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ report, onClose }) => {
+export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ report, jobId, onClose }) => {
+  const [shareCopied, setShareCopied] = useState(false);
+
   // 支持按 ESC 键退出全屏
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -33,6 +41,15 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
   }, [onClose]);
 
   if (!report) return null;
+
+  const handleShare = () => {
+    const currentOrigin = window.location.origin;
+    const currentPath = window.location.pathname;
+    const shareUrl = `${currentOrigin}${currentPath}?share=${jobId || ''}`;
+    navigator.clipboard.writeText(shareUrl);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 3000);
+  };
 
   const { painDepth, marketLandscape, mvpPlan } = report;
 
@@ -57,13 +74,38 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
           </div>
         </div>
 
-        <button
-          onClick={onClose}
-          className="btn btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
-        >
-          <X className="w-4 h-4" />
-          <span>退出全屏 (ESC)</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleShare}
+            className={`btn text-xs py-2 px-3 flex items-center gap-1.5 transition-all ${
+              shareCopied
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'btn-secondary text-gray-700 hover:text-blue-600'
+            }`}
+            title="复制在线公开查阅链接"
+          >
+            {shareCopied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>已复制！</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3.5 h-3.5 text-blue-600" />
+                <span>分享报告</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={onClose}
+            className="btn btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
+          >
+            <X className="w-4 h-4" />
+            <span>退出全屏 (ESC)</span>
+          </button>
+        </div>
       </header>
 
       {/* 主体研读内容 */}
@@ -312,6 +354,56 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
             ))}
           </div>
         </section>
+
+        {/* 6. 抓取视频与原文链接溯源 */}
+        {report.sourceVideos && report.sourceVideos.length > 0 && (
+          <section className="card-glass p-6 sm:p-8 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Video className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-base font-bold text-gray-900">
+                  原始抓取视频与内容原文链接溯源 ({report.sourceVideos.length})
+                </h2>
+              </div>
+              <span className="text-xs text-gray-400">点击可直接跳转外部平台真实页面</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+              {report.sourceVideos.map((video, vIdx) => (
+                <div
+                  key={vIdx}
+                  className="p-4 bg-gray-50/80 border border-gray-200/80 rounded-xl flex flex-col justify-between gap-2 hover:bg-indigo-50/20 hover:border-indigo-200 transition"
+                >
+                  <div>
+                    <h3 className="font-bold text-xs text-gray-900 leading-snug line-clamp-2 mb-1.5">
+                      {video.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
+                      <span>发布者: <b className="text-gray-700">{video.author}</b></span>
+                      <span className="flex items-center gap-1">
+                        <ThumbsUp className="w-3 h-3 text-amber-500" />
+                        {video.likes}
+                      </span>
+                      {video.createdAt && <span>时间: {video.createdAt}</span>}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100/80 flex items-center justify-end">
+                    <a
+                      href={video.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition"
+                    >
+                      <span>访问原文</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

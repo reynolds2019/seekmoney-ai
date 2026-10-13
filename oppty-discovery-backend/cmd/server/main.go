@@ -102,6 +102,12 @@ func main() {
 		apiV1.DELETE("/history/:jobId", historyHandler.DeleteHistory)
 	}
 
+	// 公开分享只读路由组 (免 JWT 登录鉴权，便于外部传播与协同查阅)
+	shareGroup := r.Group("/api/v1/share")
+	{
+		shareGroup.GET("/jobs/:jobId", opptyHandler.GetShareReport)
+	}
+
 	// 兼容原系统接口路径 (支持前端平滑过渡)
 	legacyAPI := r.Group("/api")
 	legacyAPI.Use(middleware.AuthMiddleware(authService))

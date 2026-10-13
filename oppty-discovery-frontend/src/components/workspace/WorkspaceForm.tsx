@@ -1,5 +1,5 @@
 import React, { useState, useId } from 'react';
-import { Sparkles, Sliders, MessageSquare, Video, Info, Tag, Plus, X, Globe2, AlertCircle } from 'lucide-react';
+import { Sparkles, Sliders, MessageSquare, Video, Info, Tag, Plus, X, Globe2, AlertCircle, Heart, Tv, Youtube, MessageCircle } from 'lucide-react';
 import { DataSourceType } from '../../types';
 
 interface WorkspaceFormProps {
@@ -114,40 +114,118 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
           1. 目标数据源平台
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {/* TikTok */}
           <button
             type="button"
             onClick={() => setDataSource('tiktok')}
-            className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
+            className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
               dataSource === 'tiktok'
-                ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-600/20'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20'
                 : 'border-gray-200 hover:border-gray-300 bg-white'
             }`}
           >
             <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center font-bold text-sm shrink-0">
               <Globe2 className="w-4 h-4" />
             </div>
-            <div>
-              <div className="text-xs font-bold text-gray-900">TikTok 国际版</div>
-              <div className="text-[11px] text-gray-500">海外全球社群与创作者痛点</div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">TikTok 国际版</div>
+              <div className="text-[10px] text-gray-500 truncate">海外全球社群痛点</div>
             </div>
           </button>
 
+          {/* 抖音 */}
           <button
             type="button"
             onClick={() => setDataSource('douyin')}
-            className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
+            className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
               dataSource === 'douyin'
-                ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-600/20'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20'
                 : 'border-gray-200 hover:border-gray-300 bg-white'
             }`}
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
               <Video className="w-4 h-4" />
             </div>
-            <div>
-              <div className="text-xs font-bold text-gray-900">抖音短视频</div>
-              <div className="text-[11px] text-gray-500">国内高频带货与行业热议吐槽</div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">抖音短视频</div>
+              <div className="text-[10px] text-gray-500 truncate">国内高频带货热议</div>
+            </div>
+          </button>
+
+          {/* 小红书 */}
+          <button
+            type="button"
+            onClick={() => setDataSource('xiaohongshu')}
+            className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
+              dataSource === 'xiaohongshu'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20'
+                : 'border-gray-200 hover:border-gray-300 bg-white'
+            }`}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-500 to-rose-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+              <Heart className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">小红书</div>
+              <div className="text-[10px] text-gray-500 truncate">真实种草与买家排雷</div>
+            </div>
+          </button>
+
+          {/* Bilibili */}
+          <button
+            type="button"
+            onClick={() => setDataSource('bilibili')}
+            className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
+              dataSource === 'bilibili'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20'
+                : 'border-gray-200 hover:border-gray-300 bg-white'
+            }`}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-400 to-blue-500 text-white flex items-center justify-center font-bold text-sm shrink-0">
+              <Tv className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">Bilibili</div>
+              <div className="text-[10px] text-gray-500 truncate">深度评测与极客吐槽</div>
+            </div>
+          </button>
+
+          {/* 微信视频号 */}
+          <button
+            type="button"
+            onClick={() => setDataSource('wechat')}
+            className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
+              dataSource === 'wechat'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20'
+                : 'border-gray-200 hover:border-gray-300 bg-white'
+            }`}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-500 to-green-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+              <MessageCircle className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">微信视频号</div>
+              <div className="text-[10px] text-gray-500 truncate">熟人商业圈层与私域</div>
+            </div>
+          </button>
+
+          {/* YouTube */}
+          <button
+            type="button"
+            onClick={() => setDataSource('youtube')}
+            className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
+              dataSource === 'youtube'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-600/20'
+                : 'border-gray-200 hover:border-gray-300 bg-white'
+            }`}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-600 to-red-700 text-white flex items-center justify-center font-bold text-sm shrink-0">
+              <Youtube className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">YouTube</div>
+              <div className="text-[10px] text-gray-500 truncate">全球技术与独立出海</div>
             </div>
           </button>
         </div>

@@ -109,4 +109,9 @@ export const opptyApi = {
       method: 'DELETE',
     });
   },
+
+  // 公开免登录获取商机透视报告
+  getShareJobDetail: (jobId: string) => {
+    return request<OpptyJobDetailVO>(`/share/jobs/${jobId}`);
+  },
 };

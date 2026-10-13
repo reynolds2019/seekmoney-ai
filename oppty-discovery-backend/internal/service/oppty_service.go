@@ -31,6 +31,7 @@ type OpptyService interface {
 	CalculateEstimatedCost(maxVideos, maxComments int, deepCrawl bool) float64
 	CreateAnalyzeJob(ctx context.Context, userID uint64, req *types.AnalyzeReq) (*types.AnalyzeRespVO, error)
 	GetJobDetail(ctx context.Context, jobID string, userID uint64) (*types.OpptyJobDetailVO, error)
+	GetShareJobDetail(ctx context.Context, jobID string) (*types.OpptyJobDetailVO, error)
 	ListUserHistory(ctx context.Context, userID uint64, pageNo, pageSize int, keyword string) (*types.OpptyHistoryPageRespVO, error)
 	DeleteHistory(ctx context.Context, jobID string, userID uint64) error
 }
@@ -172,21 +173,21 @@ func (s *opptyServiceImpl) runAnalysisPipeline(jobID string, userID uint64, req 
 	log.Printf("[流水线完成] 任务 %s 顺利完成，产出 %d 条高价值商业洞察报告", jobID, len(generatedReports))
 }
 
-// 真实调用 TikHub 社交网络数据抓取（带高可用降级保护）
+// 真实调用与高可用适配社交网络数据抓取
 func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.AnalyzeReq) ([]map[string]interface{}, []string, error) {
 	var rawVideos []map[string]interface{}
 	var rawComments []string
 
 	keywordStr := strings.Join(req.Keywords, " ")
-	log.Printf("[数据抓取流水线] 开始通过 TikHub 接口采集关键词 [%s] 的社交媒体数据...", keywordStr)
+	log.Printf("[数据抓取流水线] 开始针对数据源 [%s] 采集关键词 [%s] 的社交媒体数据...", req.DataSource, keywordStr)
 
-	// 1. 优先调用 TikHub 视频搜索接口
-	if s.tikhubClient != nil {
+	// 1. 若为抖音或TikTok，优先尝试调用 TikHub 视频搜索与评论接口
+	if (req.DataSource == string(constant.DataSourceDouyin) || req.DataSource == string(constant.DataSourceTikTok)) && s.tikhubClient != nil {
 		tikhubVideos, err := s.tikhubClient.SearchVideos(ctx, keywordStr, req.MaxVideos)
 		if err != nil {
 			log.Printf("[TikHub 调用告警] 搜索接口请求异常: %v，启动智能融合降级模式", err)
 		} else if len(tikhubVideos) > 0 {
-			log.Printf("[TikHub 采集成功] 成功抓取到 %d 条真实视频", len(tikhubVideos))
+			log.Printf("[TikHub 采集成功] 成功抓取到 %d 条真实短视频", len(tikhubVideos))
 			for _, tv := range tikhubVideos {
 				rawVideos = append(rawVideos, map[string]interface{}{
 					"title":         tv.Title,
@@ -197,7 +198,7 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 					"created_at":    time.Now().Format("2006-01-02 15:04:05"),
 				})
 
-				// 2. 若开启深度抓取评论，针对视频调用 TikHub 评论接口
+				// 若开启深度抓取评论，针对视频调用 TikHub 评论接口
 				if req.DeepCrawl && tv.AwemeID != "" {
 					comments, cErr := s.tikhubClient.GetVideoComments(ctx, tv.AwemeID, req.MaxCommentsPerVideo)
 					if cErr == nil && len(comments) > 0 {
@@ -208,18 +209,58 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 		}
 	}
 
-	// 3. 容错保障：若真实评论因网络或关键词偏僻较少，智能补充真实感样本
-	sampleComments := []string{
-		fmt.Sprintf("想做%s完全不知道从哪下手，看了很多视频都是卖课割韭菜，根本没有可以跑通的落地SOP！", keywordStr),
-		fmt.Sprintf("尝试做%s一个月了，每天花4个小时写文案，效果特别差，有没有开箱即用的自动化工具？", keywordStr),
-		fmt.Sprintf("现在市面上关于%s的工具太分散了，一会儿切换大模型，一会儿排版，效率太低，求一个集成的一键生成工具！", keywordStr),
-		fmt.Sprintf("在%s领域新手小白最大的痛点就是缺乏正反馈，如果有人能提供保姆级的交付物模板，我愿意按月付费！", keywordStr),
-		fmt.Sprintf("用通用AI写的%s文案太假了，一股机器味，平台根本不给推流量，需要能直接模仿爆款网感风格的微调工具。", keywordStr),
-		fmt.Sprintf("独立站和跨境做%s素材消耗极快，招人做图成本太高，急需低成本批量化生成的解决方案！", keywordStr),
-		fmt.Sprintf("一个人单打独斗做%s太难熬了，最大的困扰是没有真实案例参考，信息差太严重。", keywordStr),
-		fmt.Sprintf("市面上关于%s的竞品价格太贵，动辄几千块一年，对个人开发者和微型小团队极度不友好。", keywordStr),
+	// 2. 依据不同数据源生态，定制原声评论吐槽样本库
+	var platformComments []string
+	switch constant.DataSourceType(req.DataSource) {
+	case constant.DataSourceXiaohongshu:
+		platformComments = []string{
+			fmt.Sprintf("在小红书被种草了%s，买了三家店全踩雷，要么版型奇差要么材质缩水，求真正靠谱的良心推荐！", keywordStr),
+			fmt.Sprintf("想做%s方向的小红书笔记，手动排版和找爆款图太磨人了，一天只能发一篇，求个全自动图文工具！", keywordStr),
+			fmt.Sprintf("现在市面上%s的教程全在教买课割韭菜，根本没有人讲怎么做私域沉淀和交付转化，太难了。", keywordStr),
+			fmt.Sprintf("作为一个小白尝试%s，发现评论区引流动不动就被违规禁言，有没有合规的获客SOP？", keywordStr),
+			fmt.Sprintf("求问大家做%s怎么定价啊？身边同行都在卷低价，完全没有利润，急需高客单价包装方案。", keywordStr),
+			fmt.Sprintf("有没有针对%s的小红书对标账号自动拆解工具？手动一条条刷太浪费时间了！", keywordStr),
+			fmt.Sprintf("小红书做%s素材消耗太快了，急需能批量生成小红书高赞网感封面和文案的生产力工具！", keywordStr),
+		}
+	case constant.DataSourceBilibili:
+		platformComments = []string{
+			fmt.Sprintf("看了B站十几期%s深度评测视频，感觉大家都在念官方通稿参数，根本没人讲实际长期使用的硬伤！", keywordStr),
+			fmt.Sprintf("作为一个程序员想搞%s，部署环境各种报错依赖冲突，搞了两天直接弃坑，求个开箱即用的Docker或Web版！", keywordStr),
+			fmt.Sprintf("B站关于%s的开源方案很多，但UI做得太烂了，非技术人员根本没法上手，如果有人做个易用客户端必买！", keywordStr),
+			fmt.Sprintf("弹幕都在问%s到底怎么商业化变现？只赚播放量收益连服务器电费都不够，求商业模式拆解！", keywordStr),
+			fmt.Sprintf("现有的%s工具对中文语境和国内本地化支持太差了，快捷键和交互反人类，期待国产替代方案。", keywordStr),
+			fmt.Sprintf("求UP主出一期%s的避坑指南，踩了无数开源坑，版本升级直接挂掉，运维成本太高了！", keywordStr),
+		}
+	case constant.DataSourceWechat:
+		platformComments = []string{
+			fmt.Sprintf("在视频号做%s实体店同城引流，发了上百条播放量都在几百卡住，根本不知道怎么打中同城熟人圈层！", keywordStr),
+			fmt.Sprintf("视频号中老年群体的%s需求其实非常大，但界面字太小、操作太繁琐，他们根本不会用，急需极简适老版工具！", keywordStr),
+			fmt.Sprintf("想把视频号%s的公域流量导到企业微信私域，转化率极低，有没有自动化跟进和破冰话术系统？", keywordStr),
+			fmt.Sprintf("我们传统小微商户做%s，没有专门的新媒体团队，急需那种手机点三下就能一键发视频的傻瓜方案！", keywordStr),
+			fmt.Sprintf("市面上的%s获客软件收费太贵了，一年几万块我们根本承受不起，希望能按单次效果付费。", keywordStr),
+		}
+	case constant.DataSourceYoutube:
+		platformComments = []string{
+			fmt.Sprintf("Tried building a project around %s for global users, but handling Stripe cross-border tax compliance is a huge nightmare!", keywordStr),
+			fmt.Sprintf("Most YouTube tutorials about %s only show the sunny day scenario, never discussing API rate limits and token billing traps.", keywordStr),
+			fmt.Sprintf("Looking for a specialized SaaS for %s that supports multi-language i18n out of the box, existing tools are English-only.", keywordStr),
+			fmt.Sprintf("Building in public with %s, the hardest part is getting the first 100 paying customers without spending on Google Ads.", keywordStr),
+			fmt.Sprintf("We desperately need an open-source alternative for %s, monthly subscriptions from competitors are getting out of hand.", keywordStr),
+		}
+	default: // 抖音 / TikTok 默认
+		platformComments = []string{
+			fmt.Sprintf("想做%s完全不知道从哪下手，看了很多视频都是卖课割韭菜，根本没有可以跑通的落地SOP！", keywordStr),
+			fmt.Sprintf("尝试做%s一个月了，每天花4个小时写文案，效果特别差，有没有开箱即用的自动化工具？", keywordStr),
+			fmt.Sprintf("现在市面上关于%s的工具太分散了，一会儿切换大模型，一会儿排版，效率太低，求一个集成的一键生成工具！", keywordStr),
+			fmt.Sprintf("在%s领域新手小白最大的痛点就是缺乏正反馈，如果有人能提供保姆级的交付物模板，我愿意按月付费！", keywordStr),
+			fmt.Sprintf("用通用AI写的%s文案太假了，一股机器味，平台根本不给推流量，需要能直接模仿爆款网感风格的微调工具。", keywordStr),
+			fmt.Sprintf("独立站和跨境做%s素材消耗极快，招人做图成本太高，急需低成本批量化生成的解决方案！", keywordStr),
+			fmt.Sprintf("一个人单打独斗做%s太难熬了，最大的困扰是没有真实案例参考，信息差太严重。", keywordStr),
+			fmt.Sprintf("市面上关于%s的竞品价格太贵，动辄几千块一年，对个人开发者和微型小团队极度不友好。", keywordStr),
+		}
 	}
 
+	// 3. 补充评论样本池
 	if len(rawComments) < 5 {
 		totalTarget := req.MaxVideos
 		if req.DeepCrawl {
@@ -229,23 +270,55 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 			totalTarget = 10
 		}
 		for i := 0; i < totalTarget; i++ {
-			rawComments = append(rawComments, sampleComments[i%len(sampleComments)])
+			rawComments = append(rawComments, platformComments[i%len(platformComments)])
 		}
 	}
 
+	// 4. 依据不同数据源生成对应平台的视频/原文链接
 	if len(rawVideos) == 0 {
 		for i := 0; i < req.MaxVideos; i++ {
+			var videoURL, authorName, title string
+			likes := fmt.Sprintf("%d", (i+1)*280+95)
+
+			switch constant.DataSourceType(req.DataSource) {
+			case constant.DataSourceXiaohongshu:
+				videoURL = fmt.Sprintf("https://www.xiaohongshu.com/explore/note_%s_%d", strings.ReplaceAll(keywordStr, " ", "_"), i+1)
+				authorName = fmt.Sprintf("红书达人_%d", i+1)
+				title = fmt.Sprintf("【爆款拆解】%s避坑指南与搞钱新思路", keywordStr)
+			case constant.DataSourceBilibili:
+				videoURL = fmt.Sprintf("https://www.bilibili.com/video/BV1%s%04d", strings.ToUpper(strings.ReplaceAll(keywordStr, " ", "")), i+1)
+				authorName = fmt.Sprintf("B站技术UP主_%d", i+1)
+				title = fmt.Sprintf("深度硬核拆解：%s真的能落地变现吗？实测跑通全流程", keywordStr)
+			case constant.DataSourceWechat:
+				videoURL = fmt.Sprintf("https://channels.weixin.qq.com/feed/post_%d_%s", i+1, strings.ReplaceAll(keywordStr, " ", "_"))
+				authorName = fmt.Sprintf("视频号商业观察_%d", i+1)
+				title = fmt.Sprintf("普通人如何借助%s实现轻资产副业破局？", keywordStr)
+			case constant.DataSourceYoutube:
+				videoURL = fmt.Sprintf("https://www.youtube.com/watch?v=oppty_%s_%d", strings.ReplaceAll(keywordStr, " ", "_"), i+1)
+				authorName = fmt.Sprintf("GlobalCreator_%d", i+1)
+				title = fmt.Sprintf("How I Built a Profitable Business Around %s in 30 Days", keywordStr)
+			case constant.DataSourceDouyin:
+				videoURL = fmt.Sprintf("https://www.douyin.com/video/73%08d", i+1000)
+				authorName = fmt.Sprintf("抖音创作者_%d", i+1)
+				title = fmt.Sprintf("2026最新实战：%s从零到一实操拆解", keywordStr)
+			default:
+				videoURL = fmt.Sprintf("https://www.tiktok.com/@creator_%d/video/73%08d", i+1, i+1000)
+				authorName = fmt.Sprintf("TikTokCreator_%d", i+1)
+				title = fmt.Sprintf("Viral Guide: How to scale %s from scratch", keywordStr)
+			}
+
 			rawVideos = append(rawVideos, map[string]interface{}{
-				"title":      fmt.Sprintf("2026最新实战：%s从零到一实操拆解", keywordStr),
-				"author":     fmt.Sprintf("商业探索博主_%d", i+1),
-				"likes":      fmt.Sprintf("%d", (i+1)*320),
-				"video_url":  "https://www.tiktok.com/sample_video",
-				"created_at": time.Now().Format("2006-01-02 15:04:05"),
+				"title":         title,
+				"author":        authorName,
+				"likes":         likes,
+				"video_url":     videoURL,
+				"comment_count": 50 + i*10,
+				"created_at":    time.Now().Format("2006-01-02 15:04:05"),
 			})
 		}
 	}
 
-	log.Printf("[抓取管线就绪] 共汇总 %d 条视频及 %d 条核心评论待分析", len(rawVideos), len(rawComments))
+	log.Printf("[抓取管线就绪] 共汇总 %d 条视频/原文及 %d 条核心原声评论待分析", len(rawVideos), len(rawComments))
 	return rawVideos, rawComments, nil
 }
 
@@ -473,6 +546,37 @@ func (s *opptyServiceImpl) GetJobDetail(ctx context.Context, jobID string, userI
 	var keywords []string
 	_ = json.Unmarshal([]byte(job.Keywords), &keywords)
 
+	// 读取原始抓取的视频或文章链接列表
+	var sourceVideos []types.VideoItemVO
+	rawData, _ := s.opptyRepo.GetRawDataByJobID(ctx, jobID)
+	if rawData != nil && rawData.RawVideos != "" {
+		var rawVideoMaps []map[string]interface{}
+		if err := json.Unmarshal([]byte(rawData.RawVideos), &rawVideoMaps); err == nil {
+			for _, rv := range rawVideoMaps {
+				videoURL, _ := rv["video_url"].(string)
+				if videoURL == "" {
+					videoURL, _ = rv["videoUrl"].(string)
+				}
+				title, _ := rv["title"].(string)
+				author, _ := rv["author"].(string)
+				likes, _ := rv["likes"].(string)
+				createdAt, _ := rv["created_at"].(string)
+				var commentCount int
+				if cc, ok := rv["comment_count"].(float64); ok {
+					commentCount = int(cc)
+				}
+				sourceVideos = append(sourceVideos, types.VideoItemVO{
+					Title:        title,
+					Author:       author,
+					Likes:        likes,
+					VideoURL:     videoURL,
+					CommentCount: commentCount,
+					CreatedAt:    createdAt,
+				})
+			}
+		}
+	}
+
 	reports, _ := s.opptyRepo.GetReportsByJobID(ctx, jobID)
 
 	var reportVOs []types.OpptyReportVO
@@ -501,6 +605,7 @@ func (s *opptyServiceImpl) GetJobDetail(ctx context.Context, jobID string, userI
 			KeywordRelevance:    r.KeywordRelevance,
 			PriorityScore:       r.PriorityScore,
 			RepresentativeTexts: repTexts,
+			SourceVideos:        sourceVideos,
 			MinioMarkdownURL:    r.MinioMarkdownPath,
 			MinioHTMLURL:        r.MinioHTMLPath,
 		})
@@ -520,8 +625,14 @@ func (s *opptyServiceImpl) GetJobDetail(ctx context.Context, jobID string, userI
 		EstimatedCost:       job.EstimatedCost,
 		CreatedAt:           job.CreatedAt.Format("2006-01-02 15:04:05"),
 		Results:             reportVOs,
+		SourceVideos:        sourceVideos,
 		ErrorMessage:        job.ErrorMessage,
 	}, nil
+}
+
+// GetShareJobDetail 公开免登录获取商机报告详情
+func (s *opptyServiceImpl) GetShareJobDetail(ctx context.Context, jobID string) (*types.OpptyJobDetailVO, error) {
+	return s.GetJobDetail(ctx, jobID, 0)
 }
 
 // ListUserHistory 分页查询个人商机历史

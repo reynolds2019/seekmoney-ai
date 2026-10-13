@@ -89,3 +89,26 @@ func (h *OpptyHandler) CalculateCost(c *gin.Context) {
 	cost := h.opptyService.CalculateEstimatedCost(req.MaxVideos, req.MaxComments, req.DeepCrawl)
 	response.Success(c, gin.H{"estimatedCost": cost})
 }
+
+// GetShareReport 公开免登录获取商机报告详情
+// @param c *gin.Context
+func (h *OpptyHandler) GetShareReport(c *gin.Context) {
+	jobID := c.Param("jobId")
+	if jobID == "" {
+		response.Fail(c, http.StatusBadRequest, errors.CodeParamInvalid, "任务标识不能为空")
+		return
+	}
+
+	jobDetail, err := h.opptyService.GetShareJobDetail(c.Request.Context(), jobID)
+	if err != nil {
+		response.Fail(c, http.StatusInternalServerError, errors.CodeInternalError, err.Error())
+		return
+	}
+
+	if jobDetail == nil {
+		response.Fail(c, http.StatusNotFound, errors.CodeJobNotFound, "未查询到该商机报告")
+		return
+	}
+
+	response.Success(c, jobDetail)
+}

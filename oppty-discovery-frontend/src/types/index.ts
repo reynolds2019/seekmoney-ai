@@ -1,7 +1,19 @@
 /**
- * 数据源类型
+ * 数据源类型：涵盖短视频、社区图文、中长视频及海外主流平台
  */
-export type DataSourceType = 'tiktok' | 'douyin';
+export type DataSourceType = 'tiktok' | 'douyin' | 'xiaohongshu' | 'bilibili' | 'wechat' | 'youtube';
+
+/**
+ * 抓取视频与原文链接项
+ */
+export interface VideoItemVO {
+  title: string;
+  author: string;
+  likes: string;
+  videoUrl: string;
+  commentCount?: number;
+  createdAt?: string;
+}
 
 /**
  * 任务主状态
@@ -73,6 +85,7 @@ export interface OpptyReportVO {
   keywordRelevance: number;
   priorityScore: number;
   representativeTexts: string[];
+  sourceVideos?: VideoItemVO[];
   minioMarkdownUrl?: string;
   minioHtmlUrl?: string;
 }
@@ -94,6 +107,7 @@ export interface OpptyJobDetailVO {
   estimatedCost: number;
   createdAt: string;
   results: OpptyReportVO[];
+  sourceVideos?: VideoItemVO[];
   errorMessage?: string;
 }
 

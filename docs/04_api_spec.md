@@ -1,6 +1,6 @@
 # 服务接口清单 (API Specification)
 
-> **文档版本**：v1.0.1  
+> **文档版本**：v1.0.4  
 > **协议规范**：HTTP/1.1 RESTful (JSON)  
 > **状态**：已基线化 / 增量变更同步完成  
 > **工程标识**：`oppty-discovery`
@@ -11,6 +11,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **v1.0.0** | 2026-10-13 | 初始基线 | 初始 API 契约基线化，包含鉴权、分析、详情、历史及健康检查接口 | reynolds |
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. 补充后台异步协程调用的外部 TikHub API 契约细节（搜索接口与评论接口协议定义）；<br>2. 补充调用超时、容错降级及状态机映射。 | reynolds |
+| **v1.0.4** | 2026-10-13 | 契约级扩展 (A2) | 1. `POST /api/v1/analyze`：数据源枚举扩展为 `tiktok, douyin, xiaohongshu, bilibili, wechat, youtube`；<br>2. 新增免鉴权公开分享接口 `GET /api/v1/share/jobs/:jobId`；<br>3. 报告出参增加 `sourceVideos` 数组（含标题、作者、获赞、原文外链）。 | reynolds |
 
 ---
 
@@ -366,4 +367,73 @@ type AnalyzeReq struct {
 ### 4.3 高可用降级策略 (Fault Tolerance & Fallback)
 1. **调用超时**：单次 HTTP 请求超时设定为 15 秒；
 2. **熔断与降级**：若三方 API 触发限频（429）、未配置有效 Token 或网络无法连通，系统捕获异常并自动注入经过语义验证的典型高价值原声样本作为保底，确保整个商机挖掘流水线（语义聚类与 LLM 洞察提炼）始终 100% 成功交付。
+
+---
+
+## 5. 公开分享与视频溯源接口
+
+### 5.1 公开免登录获取商机透视报告
+- **端点**：`GET /api/v1/share/jobs/:jobId`
+- **认证要求**：**免登录 / 无需 Authorization 请求头**（公开只读查阅）
+- **路径参数**：
+  - `jobId`：任务 UUID
+- **响应示例 (JSON)**：
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "jobId": "c1a59c4a-2081-47f3-b9bb-bca736e2c3b9",
+    "status": "completed",
+    "progressStage": "completed",
+    "progressPercent": 100,
+    "progressMessage": "商机深度透视报告已生成！",
+    "keywords": ["AI变现", "自媒体运营"],
+    "dataSource": "douyin",
+    "deepCrawl": true,
+    "maxVideos": 10,
+    "maxCommentsPerVideo": 20,
+    "estimatedCost": 0.11,
+    "createdAt": "2026-10-13 14:00:00",
+    "results": [
+      {
+        "id": 1,
+        "clusterCode": "cluster_0",
+        "signalSize": 12,
+        "oneLinePain": "缺乏开箱即用的垂直类自动化生产SOP与集成工具",
+        "paidInterest": "High",
+        "rationale": "高频出现由于工具割裂、人工耗时长导致的低效吐槽...",
+        "potentialProduct": "全流程自媒体爆款批量生产与变现流水线Agent",
+        "painDepth": { ... },
+        "marketLandscape": { ... },
+        "mvpPlan": { ... },
+        "keywordRelevance": 92,
+        "priorityScore": 85,
+        "representativeTexts": [ ... ],
+        "sourceVideos": [
+          {
+            "title": "2026最新实战：AI变现从零到一实操拆解",
+            "author": "商业探索博主_1",
+            "likes": "320",
+            "videoUrl": "https://www.douyin.com/video/73001000",
+            "createdAt": "2026-10-13 14:00:00"
+          }
+        ],
+        "minioMarkdownUrl": "http://192.168.8.206:9000/oppty-discovery/reports/...",
+        "minioHtmlUrl": ""
+      }
+    ],
+    "sourceVideos": [
+      {
+        "title": "2026最新实战：AI变现从零到一实操拆解",
+        "author": "商业探索博主_1",
+        "likes": "320",
+        "videoUrl": "https://www.douyin.com/video/73001000",
+        "createdAt": "2026-10-13 14:00:00"
+      }
+    ]
+  },
+  "timestamp": 1791873892438
+}
+```
 

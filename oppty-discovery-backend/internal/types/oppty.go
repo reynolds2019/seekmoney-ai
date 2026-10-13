@@ -10,7 +10,7 @@ package types
 // 提交商机分析请求入参
 type AnalyzeReq struct {
 	Keywords            []string `json:"keywords" binding:"required,min=1,max=5,dive,min=1,max=50"`
-	DataSource          string   `json:"dataSource" binding:"required,oneof=tiktok douyin"`
+	DataSource          string   `json:"dataSource" binding:"required,oneof=tiktok douyin bilibili xiaohongshu wechat youtube"`
 	DeepCrawl           bool     `json:"deepCrawl"`
 	MaxVideos           int      `json:"maxVideos" binding:"required,min=5,max=20"`
 	MaxCommentsPerVideo int      `json:"maxCommentsPerVideo" binding:"required,min=10,max=100"`
@@ -21,6 +21,16 @@ type AnalyzeRespVO struct {
 	JobID         string  `json:"jobId"`
 	Status        string  `json:"status"`
 	EstimatedCost float64 `json:"estimatedCost"`
+}
+
+// 抓取视频与原文链接项
+type VideoItemVO struct {
+	Title        string `json:"title"`
+	Author       string `json:"author"`
+	Likes        string `json:"likes"`
+	VideoURL     string `json:"videoUrl"`
+	CommentCount int    `json:"commentCount,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"`
 }
 
 // 痛点深度四维剖析
@@ -74,6 +84,7 @@ type OpptyReportVO struct {
 	KeywordRelevance    int               `json:"keywordRelevance"`
 	PriorityScore       int               `json:"priorityScore"`
 	RepresentativeTexts []string          `json:"representativeTexts"`
+	SourceVideos        []VideoItemVO     `json:"sourceVideos,omitempty"`
 	MinioMarkdownURL    string            `json:"minioMarkdownUrl"`
 	MinioHTMLURL        string            `json:"minioHtmlUrl"`
 }
@@ -93,6 +104,7 @@ type OpptyJobDetailVO struct {
 	EstimatedCost       float64         `json:"estimatedCost"`
 	CreatedAt           string          `json:"createdAt"`
 	Results             []OpptyReportVO `json:"results"`
+	SourceVideos        []VideoItemVO   `json:"sourceVideos,omitempty"`
 	ErrorMessage        string          `json:"errorMessage,omitempty"`
 }
 
