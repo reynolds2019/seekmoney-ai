@@ -174,3 +174,7 @@ IP：192.168.8.206；SSH端口：22
 2. 评论内容不要做降级处理。需要通过tikhub的接口抓取相关的真实评论。
 ```
 
+### 点击分享报告按钮后的报错
+```
+阅读 E:\innovate-app\ai-reference-code\bugfix-solution\clipboard 目录下的文件，修复点击[分享报告]按钮以后的报错：“Uncaught TypeError: Cannot read properties of undefined (reading 'writeText')。”
+```

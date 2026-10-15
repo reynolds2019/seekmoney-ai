@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { OpptyReportVO, VideoItemVO } from '../../types';
+import { copyToClipboard } from '../../utils/clipboard';
 
 interface ReportViewProps {
   reports: OpptyReportVO[];
@@ -39,20 +40,24 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return null;
   }
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(true);
-    setTimeout(() => setCopiedText(false), 2000);
+  const handleCopy = async (text: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedText(true);
+      setTimeout(() => setCopiedText(false), 2000);
+    }
   };
 
-  const handleShareReport = () => {
+  const handleShareReport = async () => {
     const currentOrigin = window.location.origin;
     const currentPath = window.location.pathname;
     const targetJobId = jobId || (reports[0] as any)?.jobId || '';
     const shareUrl = `${currentOrigin}${currentPath}?share=${targetJobId}`;
-    navigator.clipboard.writeText(shareUrl);
-    setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 3000);
+    const ok = await copyToClipboard(shareUrl);
+    if (ok) {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 3000);
+    }
   };
 
   return (

@@ -20,6 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { OpptyReportVO } from '../../types';
+import { copyToClipboard } from '../../utils/clipboard';
 
 interface FullscreenReportModalProps {
   report: OpptyReportVO | null;
@@ -43,13 +44,15 @@ export const FullscreenReportModal: React.FC<FullscreenReportModalProps> = ({ re
 
   if (!report) return null;
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const currentOrigin = window.location.origin;
     const currentPath = window.location.pathname;
     const shareUrl = `${currentOrigin}${currentPath}?share=${jobId || ''}`;
-    navigator.clipboard.writeText(shareUrl);
-    setShareCopied(true);
-    setTimeout(() => setShareCopied(false), 3000);
+    const ok = await copyToClipboard(shareUrl);
+    if (ok) {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 3000);
+    }
   };
 
   const { painDepth, marketLandscape, mvpPlan } = report;
