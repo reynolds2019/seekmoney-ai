@@ -15,6 +15,7 @@
 | **v1.0.7** | 2026-10-13 | 功能级变更 (A1) & 交互级优化 (A3) | 1. **登录 UI 交互优化**：修复登录弹窗邮箱/验证码左侧图标与输入文字重叠的样式缺陷；清空预填码并增加查收邮箱提醒；<br>2. **Supabase 真实邮件外发集成**：后端读取外部环境生产配置段接入 Supabase OTP，通过 `POST /auth/v1/otp` 投递真实邮件验证码，支持 429 频控防刷友好提示；<br>3. **三重认证登录闭环**：`POST /api/v1/auth/verify-code` 支持“测试万能码 -> 5分钟内存外发码校验核销 -> Supabase 在线验证”三重保障。 | reynolds |
 | **v1.0.8** | 2026-10-15 | 功能级变更 (A1) | 1. **评论数据契约真实性强化**：明确 `representativeTexts` 必须来自真实外部 TikHub API 数据源，严禁注入 mock 模版评论；<br>2. **TikHub 抓取契约去降级**：统一通过 `GET /api/v1/douyin/web/fetch_video_comments` 抓取短视频真实社群原声评论，移除假数据兜底分支。 | reynolds |
 | **v1.0.9** | 2026-10-15 | 模块内扩展 (A2) | **全域多平台外部数据源抓取契约规范化**：<br>1. **小红书**：`GET /api/v1/xiaohongshu/app_v2/search_notes` / `GET /api/v1/xiaohongshu/app_v2/get_note_comments`；<br>2. **Bilibili**：`GET /api/v1/bilibili/web/fetch_general_search` / `GET /api/v1/bilibili/app/fetch_video_comments`；<br>3. **微信视频号**：`POST /api/v1/wechat_search/v2/fetch_search_videos` / `GET /api/v1/wechat_channels/v2/fetch_video_comments`；<br>4. **YouTube**：`GET /api/v1/youtube/web/search_video` / `GET /api/v1/youtube/web/get_video_comments`；<br>5. 统一定义各平台统一数据转换抽象与响应解析契约。 | reynolds |
+| **v1.0.10** | 2026-10-15 | 模块内扩展 (A2) | **内部 Embedding API 向量化契约规范**：规范对接 `POST /v1/embeddings`（模型：`text-embedding-v4`，单批次入参 `input: []string`，出参解析 `data[i].embedding` 浮点切片），支持分批并发与网络超时熔断。 | reynolds |
 
 ---
 

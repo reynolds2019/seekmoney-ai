@@ -62,11 +62,14 @@ type MinioConfig struct {
 
 // LLMConfig 大模型分析引擎配置
 type LLMConfig struct {
-	BaseURL        string  `yaml:"baseUrl"`
-	APIKey         string  `yaml:"apiKey"`
-	ModelName      string  `yaml:"modelName"`
-	Temperature    float32 `yaml:"temperature"`
-	TimeoutSeconds int     `yaml:"timeoutSeconds"`
+	BaseURL            string  `yaml:"baseUrl"`
+	APIKey             string  `yaml:"apiKey"`
+	ModelName          string  `yaml:"modelName"`
+	Temperature        float32 `yaml:"temperature"`
+	TimeoutSeconds     int     `yaml:"timeoutSeconds"`
+	EmbeddingModel     string  `yaml:"embeddingModel"`     // 文本向量模型名称，默认 text-embedding-v4
+	EmbeddingBatchSize int     `yaml:"embeddingBatchSize"` // 批处理文本上限，默认 10
+	EmbeddingURL       string  `yaml:"embeddingUrl"`       // 向量模型接口地址，若为空则默认使用 baseUrl + "/embeddings"
 }
 
 // TikHubConfig 社交媒体数据源抓取配置
@@ -163,6 +166,17 @@ func LoadConfig(configPath string) (*AppConfig, error) {
 		log.Println("[配置中心] 已从环境变量/本地.env动态注入 TikHub API Token")
 	} else if strings.HasPrefix(cfg.TikHub.APIToken, "${") {
 		log.Println("[配置中心警告] 未检测到 TIKHUB_API_TOKEN 环境变量，且配置文件中使用占位符")
+	}
+
+	// 补全大模型 Embedding 默认配置项
+	if cfg.LLM.EmbeddingModel == "" {
+		cfg.LLM.EmbeddingModel = "text-embedding-v4"
+	}
+	if cfg.LLM.EmbeddingBatchSize <= 0 {
+		cfg.LLM.EmbeddingBatchSize = 10
+	}
+	if cfg.LLM.EmbeddingURL == "" && cfg.LLM.BaseURL != "" {
+		cfg.LLM.EmbeddingURL = fmt.Sprintf("%s/embeddings", strings.TrimRight(cfg.LLM.BaseURL, "/"))
 	}
 
 	GlobalConfig = &cfg

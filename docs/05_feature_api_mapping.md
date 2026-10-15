@@ -15,6 +15,7 @@
 | **v1.0.3** | 2026-10-13 | 功能级变更 (A1) | 1. `FEAT-ABOUT-01`：更新为顶部右侧外部超链接 (`target="_blank" href="?view=about"`)，在新标签页全屏独立渲染，主导航恢复纯双业务 Tab。 | reynolds |
 | **v1.0.8** | 2026-10-15 | 功能级变更 (A1) | 1. `FEAT-REPO-05` 映射更新：`ReportView.tsx` 弹窗标题与 `FullscreenReportModal.tsx` 全屏组件统一为「真实社群原声评论文本样本」；<br>2. `FEAT-OPPTY-07` 映射更新：明确后台 TikHubClient 评论抓取为纯真实接口调用，杜绝 mock 降级。 | reynolds |
 | **v1.0.9** | 2026-10-15 | 模块内扩展 (A2) | `FEAT-OPPTY-07` 映射扩展：全面建立小红书（`search_notes`/`get_note_comments`）、B站（`fetch_general_search`/`fetch_video_comments`）、视频号（`fetch_search_videos`/`fetch_video_comments`）、YouTube（`search_video`/`get_video_comments`）的后端服务契约映射。 | reynolds |
+| **v1.0.10** | 2026-10-15 | 模块内扩展 (A2) | `FEAT-OPPTY-08` 映射升级：映射至 `service.ClusteringService`（包含 `DataCleaner`、`EmbeddingClient` 批量请求网关 `POST /v1/embeddings` 以及纯 Go 内存版 `DBSCAN` 密度聚类），落地持久化至 `t_oppty_report` 簇信息与代表句。 | reynolds |
 
 ---
 
@@ -34,7 +35,7 @@
 | **FEAT-OPPTY-05** | 异步商机挖掘任务创建 | `src/pages/workspace/WorkspacePage.tsx`<br>`src/components/workspace/SubmitButton.tsx` | `POST /api/v1/analyze` | `t_oppty_job` (`model.OpptyJob`) | 已完全覆盖 (100%) |
 | **FEAT-OPPTY-06** | 异步任务进度轮询与状态感知 | `src/components/workspace/JobProgressCard.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_job` | 已完全覆盖 (100%) |
 | **FEAT-OPPTY-07** | 全域数据源采集适配 (TikHub) | 后台异步协程驱动 | `service.TikHubClient`<br>• 抖音/TikTok: `fetch_general_search_v1` / `fetch_video_comments`<br>• 小红书: `search_notes` / `get_note_comments`<br>• Bilibili: `fetch_general_search` / `fetch_video_comments`<br>• 微信视频号: `fetch_search_videos` / `fetch_video_comments`<br>• YouTube: `search_video` / `get_video_comments` | `t_job_raw_data` | 已完全覆盖 (100%) |
-| **FEAT-OPPTY-08** | 评论语义密度聚类分析 | 后台异步协程驱动 | 内部 Service 聚类算法引擎 | 内存聚类，持久化于 `t_oppty_report` | 已完全覆盖 (100%) |
+| **FEAT-OPPTY-08** | 语义向量化与内存 DBSCAN 密度聚类分析引擎 | 后台异步协程驱动 | `service.ClusteringService`<br>• 清洗: `DataCleaner`<br>• 向量: `EmbeddingClient` (`POST /v1/embeddings`)<br>• 聚类: `DBSCANClusterer` 纯内存运算 | 内存聚类，持久化于 `t_oppty_report` | 已完全覆盖 (100%) |
 | **FEAT-OPPTY-09** | 大模型深度商业洞察提炼 | 后台异步协程驱动 | 内部 Service 驱动 Qwen/GLM LLM | `t_oppty_report` (`model.OpptyReport`) | 已完全覆盖 (100%) |
 | **FEAT-REPO-01** | 痛点聚类矩阵与价值卡片 | `src/components/report/ReportMatrix.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report` | 已完全覆盖 (100%) |
 | **FEAT-REPO-02** | 痛点深度四维剖析 | `src/components/report/PainDepthView.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report.pain_depth` | 已完全覆盖 (100%) |

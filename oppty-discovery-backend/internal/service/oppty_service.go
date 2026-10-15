@@ -16,6 +16,7 @@ import (
 	"oppty-discovery-backend/internal/model"
 	"oppty-discovery-backend/internal/prompts"
 	"oppty-discovery-backend/internal/repository"
+	"oppty-discovery-backend/internal/service/clustering"
 	"oppty-discovery-backend/internal/types"
 
 	"github.com/google/uuid"
@@ -37,19 +38,21 @@ type OpptyService interface {
 }
 
 type opptyServiceImpl struct {
-	cfg          *config.AppConfig
-	opptyRepo    repository.OpptyRepository
-	minioService MinioService
-	tikhubClient TikHubClient
-	httpClient   *http.Client
+	cfg               *config.AppConfig
+	opptyRepo         repository.OpptyRepository
+	minioService      MinioService
+	tikhubClient      TikHubClient
+	clusteringService clustering.ClusteringService
+	httpClient        *http.Client
 }
 
 func NewOpptyService(cfg *config.AppConfig, opptyRepo repository.OpptyRepository, minioService MinioService) OpptyService {
 	return &opptyServiceImpl{
-		cfg:          cfg,
-		opptyRepo:    opptyRepo,
-		minioService: minioService,
-		tikhubClient: NewTikHubClient(&cfg.TikHub),
+		cfg:               cfg,
+		opptyRepo:         opptyRepo,
+		minioService:      minioService,
+		tikhubClient:      NewTikHubClient(&cfg.TikHub),
+		clusteringService: clustering.NewClusteringService(&cfg.LLM),
 		httpClient: &http.Client{
 			Timeout: time.Duration(cfg.LLM.TimeoutSeconds) * time.Second,
 		},
@@ -133,10 +136,10 @@ func (s *opptyServiceImpl) runAnalysisPipeline(jobID string, userID uint64, req 
 	})
 
 	// 阶段 2: 痛点聚合分析 (clustering)
-	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageClustering), "正在归类用户高频吐槽与核心痛点...", 55, "")
+	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageClustering), "正在进行语义向量分析并归类核心痛点族群...", 55, "")
 	time.Sleep(1 * time.Second)
 
-	clusters := s.clusterTexts(rawComments, req.Keywords)
+	clusters := s.clusterTexts(ctx, rawComments, req.Keywords)
 
 	// 阶段 3: 商业机会与方案提炼 (analyzing)
 	_ = s.opptyRepo.UpdateJobProgress(ctx, jobID, string(constant.StageAnalyzing), "正在深度提炼商业机会、切入点与启动方案...", 75, "")
@@ -152,6 +155,22 @@ func (s *opptyServiceImpl) runAnalysisPipeline(jobID string, userID uint64, req 
 		report.UserID = userID
 		report.ClusterCode = fmt.Sprintf("cluster_%d", idx)
 		report.SignalSize = len(cluster.Texts)
+
+		// 若聚类算法提取出了高质量核心代表句，将其在原声样本库中置顶，提升前端原声卡片展示质感
+		if cluster.Representative != "" {
+			var currentTexts []string
+			_ = json.Unmarshal([]byte(report.RepresentativeTexts), &currentTexts)
+			var ordered []string
+			ordered = append(ordered, cluster.Representative)
+			for _, t := range currentTexts {
+				if t != cluster.Representative {
+					ordered = append(ordered, t)
+				}
+			}
+			orderedBytes, _ := json.Marshal(ordered)
+			report.RepresentativeTexts = string(orderedBytes)
+		}
+
 		generatedReports = append(generatedReports, *report)
 	}
 
@@ -233,33 +252,27 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 	return rawVideos, rawComments, nil
 }
 
-type TextCluster struct {
-	ClusterID int
-	Texts     []string
-}
-
-// 对抓取的评论执行聚类分组
-func (s *opptyServiceImpl) clusterTexts(comments []string, keywords []string) []TextCluster {
+// clusterTexts 对抓取的评论执行数据清洗与向量密度聚类分组
+func (s *opptyServiceImpl) clusterTexts(ctx context.Context, comments []string, keywords []string) []clustering.ClusterGroup {
 	if len(comments) == 0 {
-		return []TextCluster{{ClusterID: 0, Texts: []string{"暂无评论"}}}
+		return []clustering.ClusterGroup{{ClusterID: 0, Texts: []string{"暂无评论"}, Representative: "暂无评论", Size: 1}}
 	}
 
-	// 聚类为 2~3 个核心痛点族群
-	cluster1 := []string{}
-	cluster2 := []string{}
-
-	for i, c := range comments {
-		if i%2 == 0 {
-			cluster1 = append(cluster1, c)
-		} else {
-			cluster2 = append(cluster2, c)
+	result, err := s.clusteringService.ClusterTexts(ctx, comments, keywords)
+	if err != nil {
+		log.Printf("[聚类执行告警] 聚类服务执行失败，使用保底降级: %v", err)
+		return []clustering.ClusterGroup{
+			{ClusterID: 0, Texts: comments, Representative: comments[0], Size: len(comments)},
 		}
 	}
 
-	return []TextCluster{
-		{ClusterID: 0, Texts: cluster1},
-		{ClusterID: 1, Texts: cluster2},
+	if len(result.Clusters) == 0 {
+		return []clustering.ClusterGroup{
+			{ClusterID: 0, Texts: comments, Representative: comments[0], Size: len(comments)},
+		}
 	}
+
+	return result.Clusters
 }
 
 // 调用大模型服务分析聚类

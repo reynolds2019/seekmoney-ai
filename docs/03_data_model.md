@@ -14,6 +14,7 @@
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. 明确 TikHub API 响应（`aweme_info`、`comments` 结构）对 `t_job_raw_data` 的映射；<br>2. 补充外部 API 抓取入参及失败兜底标志位定义。 | reynolds |
 | **v1.0.8** | 2026-10-15 | 功能级变更 (A1) | 1. 明确 `t_job_raw_data.raw_comments` 与 `t_oppty_report.representative_texts` 均仅收录 TikHub 真实抓取的评论文本；<br>2. 彻底废弃 mock 假数据填充，真实客观记录原始数据状态。 | reynolds |
 | **v1.0.9** | 2026-10-15 | 模块内扩展 (A2) | 1. 扩充统一社媒内容实体模型 `SocialMediaItem`（涵盖抖音、TikTok、小红书、B站、视频号、YouTube 六大生态）；<br>2. 规范各平台原生 ID、标题/笔记描述、点赞量、分享链接及真实评论列表字段向 `t_job_raw_data` 的统一反序列化映射。 | reynolds |
+| **v1.0.10** | 2026-10-15 | 模块内扩展 (A2) | 补充进程内存语义聚类数据模型：`CleanedText`（清洗后文本与质量分）、`EmbeddingBatch`（文本向量切片）及 `DBSCANCluster`（痛点簇、代表句及噪点集合），零数据库侵入。 | reynolds |
 
 ---
 

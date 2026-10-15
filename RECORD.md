@@ -193,3 +193,37 @@ private stepAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
    - 聚类算法 DBSCAN 正常计算簇分类；
    - 进度条平稳度过 60% 并顺利进入后续痛点提炼与智能方案生成，流程完整走通。
 
+---
+
+# 商机发现助手 (Go 后端) 语义向量化与内存 DBSCAN 密度聚类改造记录
+
+> **记录时间**：2026-10-15  
+> **责任人**：reynolds  
+> **所属模块**：`oppty-discovery-backend` (Go / Gin / GORM)  
+> **变更类型**：三级决策树之【模块内扩展 (A2)】
+
+### 一、改造背景与痛点
+1. **现有缺陷**：原 Go 后端在分析流水线中的 `clusterTexts` 方法仅以 `i % 2 == 0`（奇偶索引取模）进行两分法伪分组，既无语义理解，也无数据去噪。
+2. **业务诉求**：引入“大模型文本向量化 (Embedding API) + 进程内存纯算法密度聚类 (DBSCAN)”，实现痛点语义精准聚合，过滤纯数字、单字水帖与纯表情噪点，并按与簇中心距离提取代表性原声评论。
+3. **架构选型原则**：
+   - 坚持纯内存计算，随分析任务结束即时释放，绝不引入沉重的外部向量数据库；
+   - 充分复用局域网内已部署的 LLM 网关（`http://192.168.8.206:3002/v1`）所提供的通义千问官方 `text-embedding-v4`（1536 维）高维向量模型；
+   - 自研实现纯 Go 版余弦距离（Cosine Distance）与 DBSCAN 密度聚类算法；
+   - 具备完整的数据清洗规则库（`DataCleaner`）以及调用超时/异常时的优雅智能降级机制。
+
+### 二、核心实现规划与分层设计
+1. **配置扩展 (`configs/config.yaml` & `internal/config/config.go`)**：在 `llm` 配置中增加 `embeddingModel`（默认 `text-embedding-v4`）与 `embeddingBatchSize`（默认 10）。
+2. **数据清洗引擎 (`internal/service/clustering/cleaner.go`)**：
+   - 过滤短文本、纯数字、纯标点、无意义表情组合、重复字符与社交客套水帖；
+   - 识别「怎么/如何/不会/难用/卡顿/耗电/贵/崩溃/报错」等痛点高频关键词并加权评分。
+3. **向量化客户端 (`internal/service/clustering/embedding.go`)**：
+   - 批量调用 OpenAI 兼容格式的 `/v1/embeddings` 端点；
+   - 自动适配单批次 10 条文本限制，支持分批请求。
+4. **纯内存 DBSCAN 聚类算法 (`internal/service/clustering/dbscan.go`)**：
+   - 计算两两向量间余弦距离 $1 - \cos(u, v)$；
+   - 实现标准 DBSCAN 密度聚类算法，自动划分核心点、边界点与离群噪点（Noise）；
+   - 根据与簇核心距离与质量评分提取代表性原声评论。
+5. **服务层装配与优雅降级 (`internal/service/oppty_service.go`)**：
+   - 替换原 `clusterTexts` 逻辑，若 Embedding 或 DBSCAN 异常时平滑降级，确保任务永不假死中断。
+
+
