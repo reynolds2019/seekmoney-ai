@@ -20,7 +20,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ onStartDiscovery }) => {
       <section className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold shadow-sm">
           <Radar className="w-4 h-4 text-blue-600 animate-pulse" />
-          <span>新一代智能商机雷达 · Oppty Discovery Assistant</span>
+          <span>新一代智能商机雷达 · Oppty Analysis Assistant</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight leading-tight">

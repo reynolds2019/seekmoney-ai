@@ -136,7 +136,7 @@ export const App: React.FC = () => {
                 <Radar className="w-5 h-5 animate-pulse" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg text-gray-900 tracking-tight">商机发现助手</span>
+                <span className="font-extrabold text-lg text-gray-900 tracking-tight">商机分析助手</span>
                 <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
                   产品介绍
                 </span>
@@ -158,7 +158,7 @@ export const App: React.FC = () => {
 
         <footer className="py-6 border-t border-gray-200 bg-white/50 text-center text-xs text-gray-400 space-y-1">
           <p className="font-semibold text-gray-600">
-            商机发现助手 (Oppty Discovery Assistant) · 痛点一键透视，商机即刻成型
+            商机分析助手 (Oppty Analysis Assistant) · 痛点一键透视，商机即刻成型
           </p>
           <p className="text-[11px]">
             From pain point to profit in seconds. © 2026 All rights reserved.
@@ -185,7 +185,7 @@ export const App: React.FC = () => {
                 <Radar className="w-5 h-5 animate-pulse" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base text-gray-900 tracking-tight">商机发现助手</span>
+                <span className="font-extrabold text-base text-gray-900 tracking-tight">商机分析助手</span>
                 <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
                   公开分享只读模式
@@ -242,7 +242,7 @@ export const App: React.FC = () => {
 
         <footer className="py-6 border-t border-gray-200 bg-white/50 text-center text-xs text-gray-400 space-y-1">
           <p className="font-semibold text-gray-600">
-            商机发现助手 (Oppty Discovery Assistant) · 痛点一键透视，商机即刻成型
+            商机分析助手 (Oppty Analysis Assistant) · 痛点一键透视，商机即刻成型
           </p>
           <p className="text-[11px]">
             From pain point to profit in seconds. © 2026 All rights reserved.
@@ -328,7 +328,7 @@ export const App: React.FC = () => {
       {/* 页脚 - 彻底清除第三方旧品牌 */}
       <footer className="mt-16 py-6 border-t border-gray-200 bg-white/50 text-center text-xs text-gray-400 space-y-1">
         <p className="font-semibold text-gray-600">
-          商机发现助手 (Oppty Discovery Assistant) · 痛点一键透视，商机即刻成型
+          商机分析助手 (Oppty Analysis Assistant) · 痛点一键透视，商机即刻成型
         </p>
         <p className="text-[11px]">
           From pain point to profit in seconds. © 2026 All rights reserved.

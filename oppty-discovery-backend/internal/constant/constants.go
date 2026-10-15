@@ -72,8 +72,8 @@ const (
 
 // 系统公共字典常量
 const (
-	AppNameZh        = "商机发现助手"
-	AppNameEn        = "Oppty Discovery Assistant"
+	AppNameZh        = "商机分析助手"
+	AppNameEn        = "Oppty Analysis Assistant"
 	AppSloganZh      = "痛点一键透视，商机即刻成型。"
 	AppSloganEn      = "From pain point to profit in seconds."
 	AppDescriptionZh = "一款集“社区评论挖掘、痛点线索提炼与商业方案构思”于一体的智能商机雷达。"

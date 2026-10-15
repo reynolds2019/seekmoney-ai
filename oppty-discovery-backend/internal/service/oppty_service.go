@@ -443,7 +443,7 @@ func cleanMarkdownJSON(raw string) string {
 
 func (s *opptyServiceImpl) buildMarkdownReport(keywords []string, reports []model.OpptyReport) string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("# 商机发现助手 - 商业洞察报告\n\n"))
+	b.WriteString(fmt.Sprintf("# 商机分析助手 - 商业洞察报告\n\n"))
 	b.WriteString(fmt.Sprintf("> **检索关键词**：%s  \n", strings.Join(keywords, "、")))
 	b.WriteString(fmt.Sprintf("> **分析时间**：%s  \n", time.Now().Format("2006-01-02 15:04:05")))
 	b.WriteString(fmt.Sprintf("> **核心Slogan**：痛点一键透视，商机即刻成型。\n\n---\n\n"))

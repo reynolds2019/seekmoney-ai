@@ -367,7 +367,7 @@ export const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ isLoading, onSubmi
           </div>
           <div className="text-right">
             <span className="text-base font-extrabold font-mono text-blue-600">
-              ~¥{totalCost}
+              ~${totalCost}
             </span>
             <span className="text-[10px] text-gray-400 ml-1">/ 次分析</span>
           </div>

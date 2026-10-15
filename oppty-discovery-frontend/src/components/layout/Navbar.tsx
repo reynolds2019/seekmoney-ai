@@ -21,9 +21,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onTabChange }) => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg text-gray-900 tracking-tight">商机发现助手</span>
+              <span className="font-extrabold text-lg text-gray-900 tracking-tight">商机分析助手</span>
               <span className="hidden md:inline-block text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">
-                Oppty Discovery
+                Oppty Analysis
               </span>
             </div>
             <p className="text-[11px] text-gray-500 font-medium hidden sm:block">

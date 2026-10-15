@@ -132,7 +132,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({ job }) => {
             {formatProgressMessage(job.progressMessage)}
           </span>
         </div>
-        <span className="text-gray-400 font-mono shrink-0">预估成本: ¥{job.estimatedCost}</span>
+        <span className="text-gray-400 font-mono shrink-0">预估成本: ${job.estimatedCost}</span>
       </div>
     </div>
   );

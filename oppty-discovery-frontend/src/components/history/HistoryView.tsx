@@ -137,7 +137,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ onSelectJob }) => {
                     {item.reportCount} 组商机
                   </span>
                   <span className="text-[10px] text-gray-400 font-mono">
-                    成本: ¥{item.estimatedCost}
+                    成本: ${item.estimatedCost}
                   </span>
                 </div>
 

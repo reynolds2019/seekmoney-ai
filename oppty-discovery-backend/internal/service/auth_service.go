@@ -86,9 +86,9 @@ func (s *authServiceImpl) SendEmailCode(ctx context.Context, email string) (*typ
 			"email":       email,
 			"create_user": true,
 			"data": map[string]string{
-				"app_name":   "商机发现助手",
-				"site_title": "商机发现助手 · 商业洞察雷达",
-				"subject":    "【商机发现助手】您的专属登录验证码",
+				"app_name":   "商机分析助手",
+				"site_title": "商机分析助手 · 商业洞察雷达",
+				"subject":    "【商机分析助手】您的专属登录验证码",
 			},
 		}
 
