@@ -12,6 +12,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **v1.0.0** | 2026-10-13 | 初始基线 | 初始数据模型基线化，包含用户、任务、报告及原始快照实体与 DDL | reynolds |
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. 明确 TikHub API 响应（`aweme_info`、`comments` 结构）对 `t_job_raw_data` 的映射；<br>2. 补充外部 API 抓取入参及失败兜底标志位定义。 | reynolds |
+| **v1.0.8** | 2026-10-15 | 功能级变更 (A1) | 1. 明确 `t_job_raw_data.raw_comments` 与 `t_oppty_report.representative_texts` 均仅收录 TikHub 真实抓取的评论文本；<br>2. 彻底废弃 mock 假数据填充，真实客观记录原始数据状态。 | reynolds |
 
 ---
 

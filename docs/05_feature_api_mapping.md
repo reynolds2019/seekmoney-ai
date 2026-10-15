@@ -13,6 +13,7 @@
 | **v1.0.1** | 2026-10-13 | 功能级变更 (A1) & 模块内扩展 (A2) | 1. `FEAT-OPPTY-07`：细化 TikHubClient 外部 RESTful 调用端点与高可用容错机制；<br>2. `FEAT-SYS-04`：记录前端 Vite 本地 PostCSS 隔离配置与 TailwindCSS 样式编译闭环映射。 | reynolds |
 | **v1.0.2** | 2026-10-13 | 功能级变更 (A1) | 1. `FEAT-ABOUT-01`：新增独立产品介绍页面组件映射与导航联动；<br>2. 优化 `FEAT-OPPTY-04` / `FEAT-OPPTY-06`：去技术化与 Tooltip 问号组件映射。 | reynolds |
 | **v1.0.3** | 2026-10-13 | 功能级变更 (A1) | 1. `FEAT-ABOUT-01`：更新为顶部右侧外部超链接 (`target="_blank" href="?view=about"`)，在新标签页全屏独立渲染，主导航恢复纯双业务 Tab。 | reynolds |
+| **v1.0.8** | 2026-10-15 | 功能级变更 (A1) | 1. `FEAT-REPO-05` 映射更新：`ReportView.tsx` 弹窗标题与 `FullscreenReportModal.tsx` 全屏组件统一为「真实社群原声评论文本样本」；<br>2. `FEAT-OPPTY-07` 映射更新：明确后台 TikHubClient 评论抓取为纯真实接口调用，杜绝 mock 降级。 | reynolds |
 
 ---
 
@@ -38,7 +39,7 @@
 | **FEAT-REPO-02** | 痛点深度四维剖析 | `src/components/report/PainDepthView.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report.pain_depth` | 已完全覆盖 (100%) |
 | **FEAT-REPO-03** | 竞品与市场格局对比 | `src/components/report/MarketLandscapeView.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report.market_landscape` | 已完全覆盖 (100%) |
 | **FEAT-REPO-04** | MVP 商业落地执行规划卡片 | `src/components/report/MVPPlanCard.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report.mvp_plan` | 已完全覆盖 (100%) |
-| **FEAT-REPO-05** | 真实代表性原声评论弹窗 | `src/components/report/RawCommentsModal.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report.representative_texts` | 已完全覆盖 (100%) |
+| **FEAT-REPO-05** | 真实社群原声评论文本样本弹窗 | `src/components/report/ReportView.tsx`<br>`src/components/report/FullscreenReportModal.tsx` | `GET /api/v1/jobs/:jobId` | `t_oppty_report.representative_texts` | 已完全覆盖 (100%) |
 | **FEAT-REPO-06** | 商机报告沉浸式全屏查看模式 | `src/components/report/FullscreenReportModal.tsx` | 本地模态全屏状态切换 | `t_oppty_report` 前端全屏呈现 | 已完全覆盖 (100%) |
 | **FEAT-REPO-07** | 报告 Markdown/HTML 归档至 MinIO | `src/components/report/ExportReportButton.tsx` | 后端自动导出并存储 MinIO | `minio-server:9000/oppty-discovery` | 已完全覆盖 (100%) |
 | **FEAT-HIST-01** | 个人商机历史分页列表查询 | `src/pages/history/HistoryPage.tsx`<br>`src/components/history/HistoryTable.tsx` | `GET /api/v1/history` | `t_oppty_job`<br>`t_oppty_report` | 已完全覆盖 (100%) |

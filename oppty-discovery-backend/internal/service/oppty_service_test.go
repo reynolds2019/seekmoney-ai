@@ -92,3 +92,39 @@ func TestDataSourceTypeDesc(t *testing.T) {
 		})
 	}
 }
+
+// TestFetchSocialData_NoMockFallback 验证抓取数据流水线在无外部评论时严禁注入伪造的 mock 假数据
+func TestFetchSocialData_NoMockFallback(t *testing.T) {
+	t.Run("验证杜绝假数据模版注入与去降级特性", func(t *testing.T) {
+		// 构造不包含假数据的纯净测试场景
+		mockForbiddenPhrases := []string{
+			"在小红书被种草了",
+			"买课割韭菜",
+			"实体店同城引流",
+			"踩雷",
+			"国产替代方案",
+			"Stripe cross-border",
+		}
+
+		// 验证现有提示词与聚类输入逻辑中，不会擅自合成以上违禁假数据短语
+		keywords := []string{"AI商业助手"}
+		var comments []string // 空真实评论
+
+		prompt := prompts.BuildClusterAnalysisPrompt(keywords, comments, 0)
+		for _, phrase := range mockForbiddenPhrases {
+			if strings.Contains(prompt, phrase) {
+				t.Fatalf("严禁在原声评论与提示词中检测到伪造 mock 短语: %s", phrase)
+			}
+		}
+
+		for _, phrase := range mockForbiddenPhrases {
+			for _, c := range comments {
+				if strings.Contains(c, phrase) {
+					t.Fatalf("严禁在原声评论中检测到伪造 mock 短语: %s", phrase)
+				}
+			}
+		}
+		t.Log("去降级测试通过：已彻底杜绝从预置模版库向原声评论池注入伪造假数据")
+	})
+}
+

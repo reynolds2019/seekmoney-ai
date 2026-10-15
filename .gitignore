@@ -93,3 +93,7 @@ lib/crawlers/douyin_new/data/
 /analysis-results
 .env.production
 .agents/**
+
+# Vite temporary files
+*.timestamp-*.mjs
+*.timestamp-*.js

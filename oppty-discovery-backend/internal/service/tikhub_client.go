@@ -173,10 +173,24 @@ func (c *tikHubClientImpl) SearchVideos(ctx context.Context, keyword string, lim
 	return results, nil
 }
 
-// GetVideoComments 调用 TikHub 抓取单个视频真实评论
+/**
+ * desc: 调用 TikHub 抓取单个短视频下的真实用户原声评论
+ * date: 2026-10-15 11:25:00
+ * @author reynolds
+ * @since v1.0.0
+ * @param ctx 上下文
+ * @param awemeID 视频ID
+ * @param count 限制评论条数
+ * @return []string 真实评论文本切片
+ * @return error 异常信息
+ */
 func (c *tikHubClientImpl) GetVideoComments(ctx context.Context, awemeID string, count int) ([]string, error) {
 	if awemeID == "" {
 		return nil, nil
+	}
+
+	if count <= 0 {
+		count = 20
 	}
 
 	params := url.Values{}
@@ -188,7 +202,7 @@ func (c *tikHubClientImpl) GetVideoComments(ctx context.Context, awemeID string,
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("创建 TikHub 评论请求失败: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+c.apiToken)
@@ -196,31 +210,59 @@ func (c *tikHubClientImpl) GetVideoComments(ctx context.Context, awemeID string,
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("请求 TikHub 评论接口网络异常: %w", err)
 	}
 	defer resp.Body.Close()
 
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取 TikHub 评论响应体失败: %w", err)
+	}
+
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("[TikHub API 警告] 视频 [%s] 评论接口响应非200: %d, 响应: %s", awemeID, resp.StatusCode, string(respBytes))
 		return nil, fmt.Errorf("TikHub 获取评论接口异常 (HTTP %d)", resp.StatusCode)
 	}
 
 	var resMap map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&resMap); err != nil {
-		return nil, err
+	if err := json.Unmarshal(respBytes, &resMap); err != nil {
+		return nil, fmt.Errorf("解析 TikHub 评论 JSON 响应失败: %w", err)
 	}
 
 	var comments []string
+	var commentList []interface{}
+
+	// 稳健支持 TikHub 各版本层级解析: data.comments / data.data.comments / comments
 	if dataMap, ok := resMap["data"].(map[string]interface{}); ok {
-		if commentList, ok := dataMap["comments"].([]interface{}); ok {
-			for _, cItem := range commentList {
-				if cMap, ok := cItem.(map[string]interface{}); ok {
-					if text, ok := cMap["text"].(string); ok && strings.TrimSpace(text) != "" {
-						comments = append(comments, strings.TrimSpace(text))
-					}
-				}
+		if cl, ok := dataMap["comments"].([]interface{}); ok {
+			commentList = cl
+		} else if innerMap, ok := dataMap["data"].(map[string]interface{}); ok {
+			if cl, ok := innerMap["comments"].([]interface{}); ok {
+				commentList = cl
 			}
+		}
+	} else if cl, ok := resMap["comments"].([]interface{}); ok {
+		commentList = cl
+	}
+
+	for _, cItem := range commentList {
+		cMap, ok := cItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		var text string
+		if t, ok := cMap["text"].(string); ok {
+			text = t
+		} else if c, ok := cMap["content"].(string); ok {
+			text = c
+		}
+		text = strings.TrimSpace(text)
+		if text != "" {
+			comments = append(comments, text)
 		}
 	}
 
+	log.Printf("[TikHub API] 视频 [%s] 成功解析到 %d 条真实社群评论", awemeID, len(comments))
 	return comments, nil
 }
+

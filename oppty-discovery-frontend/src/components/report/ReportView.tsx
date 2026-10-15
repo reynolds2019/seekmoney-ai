@@ -238,7 +238,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-blue-600" />
                 <h4 className="text-sm font-bold text-gray-900">
-                  真实用户原声评论与吐槽样本
+                  真实社群原声评论文本样本
                 </h4>
               </div>
               <button
