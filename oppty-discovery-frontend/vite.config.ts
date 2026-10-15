@@ -5,6 +5,7 @@ import autoprefixer from 'autoprefixer';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/opp/' : '/',
   plugins: [react()],
   css: {
     postcss: {

@@ -6,6 +6,7 @@
 *.dylib
 /server
 /server.exe
+/server_linux
 cmd/server/server
 cmd/server/server.exe
 
@@ -24,3 +25,8 @@ go.work
 # Temporary files
 tmp/
 bin/
+
+# Environment files
+.env
+.env.*
+!.env.example

@@ -1,15 +1,19 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 /**
  * desc: 系统全局配置结构体与加载逻辑
- * date: 2026-10-13 11:25:00
+ * date: 2026-10-13 18:25:00
  * @author reynolds
  * @since v1.0.0
  */
@@ -95,8 +99,54 @@ type AppConfig struct {
 
 var GlobalConfig *AppConfig
 
+// loadDotEnv 自动搜索并加载本地 .env 文件至环境变量
+func loadDotEnv(configPath string) {
+	candidates := []string{
+		os.Getenv("ENV_FILE_PATH"),
+		".env",
+		"../.env",
+		"configs/.env",
+		filepath.Join(filepath.Dir(configPath), ".env"),
+		filepath.Join(filepath.Dir(configPath), "../.env"),
+	}
+
+	for _, path := range candidates {
+		if path == "" {
+			continue
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			continue
+		}
+		defer file.Close()
+
+		log.Printf("[配置中心] 成功检测并加载本地环境文件: %s", path)
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				k := strings.TrimSpace(parts[0])
+				v := strings.TrimSpace(parts[1])
+				v = strings.Trim(v, "\"'")
+				// 环境变量优先级高于 .env 文件：仅在系统环境变量未设置时注入
+				if os.Getenv(k) == "" {
+					_ = os.Setenv(k, v)
+				}
+			}
+		}
+		return
+	}
+}
+
 // LoadConfig 从指定 YAML 文件加载配置
 func LoadConfig(configPath string) (*AppConfig, error) {
+	// 优先尝试加载本地 .env 配置文件
+	loadDotEnv(configPath)
+
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("读取配置文件失败 [%s]: %w", configPath, err)
@@ -105,6 +155,14 @@ func LoadConfig(configPath string) (*AppConfig, error) {
 	var cfg AppConfig
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("解析配置文件内容失败: %w", err)
+	}
+
+	// 敏感凭证环境变量优先覆盖逻辑
+	if envToken := os.Getenv("TIKHUB_API_TOKEN"); envToken != "" {
+		cfg.TikHub.APIToken = envToken
+		log.Println("[配置中心] 已从环境变量/本地.env动态注入 TikHub API Token")
+	} else if strings.HasPrefix(cfg.TikHub.APIToken, "${") {
+		log.Println("[配置中心警告] 未检测到 TIKHUB_API_TOKEN 环境变量，且配置文件中使用占位符")
 	}
 
 	GlobalConfig = &cfg

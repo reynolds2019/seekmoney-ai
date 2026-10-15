@@ -95,8 +95,8 @@ llm:
 tikhub:
   # TikHub API 网关地址
   baseUrl: "https://api.tikhub.io"
-  # TikHub 调用凭证 Token (已配置用户提供的真实 Key)
-  apiToken: "gKVeXOhBwnv1h1+cH4Wznw7rDje+A51fwCvXqmS7C/mHiA6TKlrdQCm4Kw=="
+  # TikHub 调用凭证 Token (已安全抽离至本地私密 .env 文件或系统环境变量 TIKHUB_API_TOKEN，切勿硬编码提交代码仓库)
+  apiToken: ""
   # 请求重试次数
   retryCount: 3
   # 单次请求超时时间 (秒)

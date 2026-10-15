@@ -1,6 +1,7 @@
 import { ApiResponse, OpptyJobDetailVO, OpptyHistoryItemVO, UserProfileVO } from '../types';
 
-const API_BASE = '/api/v1';
+const BASE_PATH = ((import.meta as any).env?.BASE_URL as string) || '/';
+const API_BASE = BASE_PATH.endsWith('/') ? `${BASE_PATH}api/v1` : `${BASE_PATH}/api/v1`;
 
 /**
  * 通用网络请求封装

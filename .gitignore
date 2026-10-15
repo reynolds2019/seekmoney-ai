@@ -24,6 +24,13 @@ build/
 # binaries
 *.exe
 *.dll
+*.so
+*.dylib
+server
+server.exe
+server_linux
+*.test
+*.out
 
 # misc
 .DS_Store
@@ -37,10 +44,13 @@ yarn-error.log*
 
 # env files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+
+# Temporary & workspace files
+tmp/
+bin/
+go.work
 
 # vercel
 .vercel
