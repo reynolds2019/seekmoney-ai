@@ -191,20 +191,23 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 	keywordStr := strings.Join(req.Keywords, " ")
 	log.Printf("[数据抓取流水线] 开始针对数据源 [%s] 采集关键词 [%s] 的真实社交媒体数据...", req.DataSource, keywordStr)
 
-	// 1. 若为抖音或TikTok，调用 TikHub 视频搜索与真实评论接口
-	if (req.DataSource == string(constant.DataSourceDouyin) || req.DataSource == string(constant.DataSourceTikTok)) && s.tikhubClient != nil {
-		tikhubVideos, err := s.tikhubClient.SearchVideos(ctx, keywordStr, req.MaxVideos)
+	// 1. 调用 TikHub 全平台通用采集接口抓取真实内容与社群原声评论
+	if s.tikhubClient != nil {
+		commentLimit := req.MaxCommentsPerVideo
+		if commentLimit <= 0 {
+			commentLimit = 20
+		}
+		videoLimit := req.MaxVideos
+		if videoLimit <= 0 {
+			videoLimit = 5
+		}
+
+		items, comments, err := s.tikhubClient.FetchPlatformData(ctx, req.DataSource, keywordStr, videoLimit, commentLimit)
 		if err != nil {
-			log.Printf("[TikHub 调用告警] 视频搜索接口异常: %v", err)
-		} else if len(tikhubVideos) > 0 {
-			log.Printf("[TikHub 采集成功] 成功抓取到 %d 条真实短视频", len(tikhubVideos))
-
-			commentLimit := req.MaxCommentsPerVideo
-			if commentLimit <= 0 {
-				commentLimit = 20
-			}
-
-			for _, tv := range tikhubVideos {
+			log.Printf("[TikHub 全域调用告警] 平台 [%s] 搜索/评论接口异常: %v", req.DataSource, err)
+		} else if len(items) > 0 {
+			log.Printf("[TikHub 全域采集成功] 成功抓取到平台 [%s] 的 %d 条真实内容与 %d 条真实评论", req.DataSource, len(items), len(comments))
+			for _, tv := range items {
 				rawVideos = append(rawVideos, map[string]interface{}{
 					"title":         tv.Title,
 					"author":        tv.Author,
@@ -213,18 +216,8 @@ func (s *opptyServiceImpl) fetchSocialData(ctx context.Context, req *types.Analy
 					"comment_count": tv.CommentCount,
 					"created_at":    time.Now().Format("2006-01-02 15:04:05"),
 				})
-
-				// 无论是否开启深度模式，均强制通过 TikHub 接口真实抓取社群原声评论，绝不注入假评论模版
-				if tv.AwemeID != "" {
-					comments, cErr := s.tikhubClient.GetVideoComments(ctx, tv.AwemeID, commentLimit)
-					if cErr == nil && len(comments) > 0 {
-						log.Printf("[TikHub 采集成功] 视频 [%s] 抓取到 %d 条真实原声评论", tv.AwemeID, len(comments))
-						rawComments = append(rawComments, comments...)
-					} else if cErr != nil {
-						log.Printf("[TikHub 采集告警] 视频 [%s] 获取真实评论失败: %v", tv.AwemeID, cErr)
-					}
-				}
 			}
+			rawComments = append(rawComments, comments...)
 		}
 	}
 

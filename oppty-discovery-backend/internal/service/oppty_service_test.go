@@ -1,6 +1,10 @@
 package service_test
 
 import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -127,4 +131,260 @@ func TestFetchSocialData_NoMockFallback(t *testing.T) {
 		t.Log("去降级测试通过：已彻底杜绝从预置模版库向原声评论池注入伪造假数据")
 	})
 }
+
+// TestTikHubClient_MultiPlatformHttpParsing 测试小红书、B站、微信视频号、YouTube多平台真实数据与评论HTTP抓取解析
+func TestTikHubClient_MultiPlatformHttpParsing(t *testing.T) {
+	// 创建 Mock HTTP 服务端，模拟各平台 TikHub 真实响应结构
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		w.Header().Set("Content-Type", "application/json")
+
+		switch path {
+		case "/api/v1/xiaohongshu/app_v2/search_notes":
+			// 小红书笔记搜索模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"items": []interface{}{
+						map[string]interface{}{
+							"id": "xhs_note_1001",
+							"note_card": map[string]interface{}{
+								"display_title": "录音卡片实测：到底值不值得买？",
+								"user": map[string]interface{}{
+									"nickname": "科技小当家",
+								},
+								"interact_info": map[string]interface{}{
+									"liked_count": "1.2w",
+								},
+							},
+						},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/xiaohongshu/app_v2/get_note_comments":
+			// 小红书笔记评论真实接口结构对齐：data.data.comments 及 sub_comments 楼中楼
+			resp := map[string]interface{}{
+				"code": 200,
+				"data": map[string]interface{}{
+					"code":    0,
+					"success": true,
+					"data": map[string]interface{}{
+						"comments": []interface{}{
+							map[string]interface{}{
+								"content": "续航太差了，用两小时就没电",
+								"sub_comments": []interface{}{
+									map[string]interface{}{"content": "确实，实测开会连录一个半小时直接红灯"},
+								},
+							},
+							map[string]interface{}{"content": "转写准确率在嘈杂环境下很低"},
+						},
+						"has_more": false,
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/bilibili/web/fetch_general_search":
+			// B站视频搜索模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"result": []interface{}{
+						map[string]interface{}{
+							"result_type": "video",
+							"data": []interface{}{
+								map[string]interface{}{
+									"bvid":        "BV1xx411c7mD",
+									"title":       "【深度评测】录音卡片到底是不是智商税？",
+									"author":      "极客老张",
+									"favorites":   8848,
+									"review":      256,
+									"arcurl":      "https://www.bilibili.com/video/BV1xx411c7mD",
+								},
+							},
+						},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/bilibili/app/fetch_video_comments":
+			// B站视频评论模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"replies": []interface{}{
+						map[string]interface{}{
+							"content": map[string]interface{}{
+								"message": "软件订阅制太贵了，硬件买了还要按月收费无法接受",
+							},
+						},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/wechat_search/v2/fetch_search_videos":
+			// 微信视频号搜索模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"items": []interface{}{
+						map[string]interface{}{
+							"object_id": "wx_feed_3001",
+							"description": "商务必备？录音降噪卡片现场体验",
+							"nickname":    "职场效率君",
+							"like_count":  3200,
+						},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/wechat_channels/v2/fetch_video_comments":
+			// 微信视频号评论模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"comments": []interface{}{
+						map[string]interface{}{"content": "经常漏录重要会议，不敢完全信任"},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/youtube/web/search_video":
+			// YouTube 视频搜索模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"contents": []interface{}{
+						map[string]interface{}{
+							"videoRenderer": map[string]interface{}{
+								"videoId": "yt_video_4001",
+								"title": map[string]interface{}{
+									"runs": []interface{}{
+										map[string]interface{}{"text": "AI Voice Recorder Card Review"},
+									},
+								},
+								"ownerText": map[string]interface{}{
+									"runs": []interface{}{
+										map[string]interface{}{"text": "TechExplorer"},
+									},
+								},
+								"navigationEndpoint": map[string]interface{}{
+									"commandMetadata": map[string]interface{}{
+										"webCommandMetadata": map[string]interface{}{
+											"url": "/watch?v=yt_video_4001",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		case "/api/v1/youtube/web/get_video_comments":
+			// YouTube 评论模拟响应
+			resp := map[string]interface{}{
+				"data": map[string]interface{}{
+					"comments": []interface{}{
+						map[string]interface{}{"text": "The subscription fee is absurd for basic transcription"},
+					},
+				},
+			}
+			_ = json.NewEncoder(w).Encode(resp)
+
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	client := service.NewTikHubClient(&config.TikHubConfig{
+		BaseURL:        server.URL,
+		APIToken:       "test-token",
+		TimeoutSeconds: 5,
+	})
+
+	ctx := context.Background()
+
+	t.Run("测试小红书平台笔记与真实评论解析", func(t *testing.T) {
+		items, comments, err := client.FetchPlatformData(ctx, "xiaohongshu", "录音卡片", 5, 10)
+		if err != nil {
+			t.Fatalf("小红书抓取执行失败: %v", err)
+		}
+		if len(items) != 1 {
+			t.Fatalf("期望解析到 1 条小红书笔记，实际为: %d", len(items))
+		}
+		if items[0].AwemeID != "xhs_note_1001" || !strings.Contains(items[0].Title, "录音卡片实测") {
+			t.Errorf("小红书笔记字段解析不符合预期: %+v", items[0])
+		}
+		if len(comments) != 3 {
+			t.Fatalf("期望解析到 3 条小红书真实评论（含楼中楼子评），实际为: %d", len(comments))
+		}
+		if !strings.Contains(comments[0], "续航太差") {
+			t.Errorf("小红书评论内容不匹配: %s", comments[0])
+		}
+		if !strings.Contains(comments[1], "实测开会连录") {
+			t.Errorf("小红书子评论内容不匹配: %s", comments[1])
+		}
+	})
+
+	t.Run("测试B站平台视频与真实评论解析", func(t *testing.T) {
+		items, comments, err := client.FetchPlatformData(ctx, "bilibili", "录音卡片", 5, 10)
+		if err != nil {
+			t.Fatalf("B站抓取执行失败: %v", err)
+		}
+		if len(items) != 1 {
+			t.Fatalf("期望解析到 1 个B站视频，实际为: %d", len(items))
+		}
+		if items[0].AwemeID != "BV1xx411c7mD" || items[0].Author != "极客老张" {
+			t.Errorf("B站视频字段解析不符合预期: %+v", items[0])
+		}
+		if len(comments) != 1 {
+			t.Fatalf("期望解析到 1 条B站真实评论，实际为: %d", len(comments))
+		}
+		if !strings.Contains(comments[0], "订阅制太贵") {
+			t.Errorf("B站评论内容不匹配: %s", comments[0])
+		}
+	})
+
+	t.Run("测试微信视频号真实内容与评论解析", func(t *testing.T) {
+		items, comments, err := client.FetchPlatformData(ctx, "wechat", "录音卡片", 5, 10)
+		if err != nil {
+			t.Fatalf("微信视频号抓取执行失败: %v", err)
+		}
+		if len(items) != 1 {
+			t.Fatalf("期望解析到 1 个微信视频号条目，实际为: %d", len(items))
+		}
+		if items[0].AwemeID != "wx_feed_3001" || items[0].Author != "职场效率君" {
+			t.Errorf("微信视频号条目字段解析不符合预期: %+v", items[0])
+		}
+		if len(comments) != 1 {
+			t.Fatalf("期望解析到 1 条微信视频号真实评论，实际为: %d", len(comments))
+		}
+		if !strings.Contains(comments[0], "漏录重要会议") {
+			t.Errorf("微信视频号评论内容不匹配: %s", comments[0])
+		}
+	})
+
+	t.Run("测试YouTube全球视频与真实评论解析", func(t *testing.T) {
+		items, comments, err := client.FetchPlatformData(ctx, "youtube", "voice recorder", 5, 10)
+		if err != nil {
+			t.Fatalf("YouTube抓取执行失败: %v", err)
+		}
+		if len(items) != 1 {
+			t.Fatalf("期望解析到 1 个YouTube条目，实际为: %d", len(items))
+		}
+		if items[0].AwemeID != "yt_video_4001" || items[0].Author != "TechExplorer" {
+			t.Errorf("YouTube条目字段解析不符合预期: %+v", items[0])
+		}
+		if len(comments) != 1 {
+			t.Fatalf("期望解析到 1 条YouTube真实评论，实际为: %d", len(comments))
+		}
+		if !strings.Contains(comments[0], "subscription fee is absurd") {
+			t.Errorf("YouTube评论内容不匹配: %s", comments[0])
+		}
+	})
+}
+
 

@@ -178,3 +178,8 @@ IP：192.168.8.206；SSH端口：22
 ```
 阅读 E:\innovate-app\ai-reference-code\bugfix-solution\clipboard 目录下的文件，修复点击[分享报告]按钮以后的报错：“Uncaught TypeError: Cannot read properties of undefined (reading 'writeText')。”
 ```
+
+### 小红书评论获取异常
+```
+检查一下 src\、types\ 目录下的代码，这个原有版本的逻辑中，成功通过tikhub获取了小红书的评论。而我现在这个程序没有成功获取评论。
+```

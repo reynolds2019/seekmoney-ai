@@ -14,6 +14,7 @@
 | **v1.0.2** | 2026-10-13 | 功能级变更 (A1) | 1. 扩充 `TC-UI-OPT-01` ~ `TC-UI-OPT-05`：首页空间释放、独立产品介绍、问号气泡提示、去 AI 技术术语验收。 | reynolds |
 | **v1.0.3** | 2026-10-13 | 功能级变更 (A1) | 1. 扩充 `TC-UI-NAV-01` ~ `TC-UI-NAV-03`：主导航纯双 Tab、顶栏右侧产品介绍外链及新标签页独立呈现验收。 | reynolds |
 | **v1.0.8** | 2026-10-15 | 功能级变更 (A1) | 1. 新增用例组 11（`TC-UI-COMMENT-01` ~ `02`）：原声评论弹窗与全屏大屏标题统一定名为「真实社群原声评论文本样本」验收；<br>2. 后端新增 `TC-BE-OPPTY-07`：彻底废弃 mock 假评论降级拼接，强校验评论数据真实性与 TikHub 直连抓取。 | reynolds |
+| **v1.0.9** | 2026-10-15 | 模块内扩展 (A2) | 新增用例组 12（`TC-BE-CRAWL-XHS` ~ `YT`）：覆盖小红书、B站、微信视频号、YouTube 多数据源的 TikHub 原生真实抓取、字段解析与评论提取验收用例。 | reynolds |
 
 ---
 
@@ -143,6 +144,18 @@
 | **TC-UI-COMMENT-01** | 评论样本标题文案一致性验收 | 界面渲染 | 在工作台生成或载入商机报告，分别打开报告卡片中的原声评论弹窗及全屏报告模态框 | 两个弹窗的标题文案严格一致，均显示为「真实社群原声评论文本样本」，无任何歧义或不一致文案 |
 | **TC-UI-COMMENT-02** | 评论真实性与去降级化验收 | 接口与逻辑 | 发起商机发现任务抓取短视频社群评论 | 后台强制通过 TikHub 接口真实拉取短视频评论，绝不注入预置的模版假评论（如“在小红书被种草了...买课割韭菜”等），确保数据 100% 来源真实社群 |
 | **TC-BE-OPPTY-07** | 后端抓取去降级单元测试 | 单元测试 | 执行 `TestFetchSocialData_NoMockFallback` | 模拟 TikHub 抓取逻辑，验证在任何情况下均不会填充预置的假评论样本库 |
+
+---
+
+### 用例组 12：全域多平台原生抓取与真实评论验收 (v1.0.9)
+
+| 用例编号 | 涉及平台 | 测试阶段 | 操作步骤 / 输入参数 | 预期结果与中文断言 |
+| :--- | :--- | :--- | :--- | :--- |
+| **TC-BE-CRAWL-XHS** | 小红书 (xiaohongshu) | 后端集成 | 关键词: `录音卡片`, 数据源: `xiaohongshu` | 成功请求 `/api/v1/xiaohongshu/app_v2/search_notes` 获取真实笔记，并调用 `get_note_comments` 获取真实社群评论，返回文本条数 > 0，绝无假数据 |
+| **TC-BE-CRAWL-BILI** | Bilibili (bilibili) | 后端集成 | 关键词: `录音卡片`, 数据源: `bilibili` | 成功请求 `/api/v1/bilibili/web/fetch_general_search` 获取视频与 AV 号，并调用 `fetch_video_comments` 提取真实评论 |
+| **TC-BE-CRAWL-WX** | 微信视频号 (wechat) | 后端集成 | 关键词: `录音卡片`, 数据源: `wechat` | 成功请求 `/api/v1/wechat_search/v2/fetch_search_videos` 获取视频及 ID，并调用 `fetch_video_comments` 获取真实评论 |
+| **TC-BE-CRAWL-YT** | YouTube (youtube) | 后端集成 | 关键词: `AI tool`, 数据源: `youtube` | 成功请求 `/api/v1/youtube/web/search_video` 获取视频列表，并调用 `get_video_comments` 提取真实评论 |
+| **TC-BE-CRAWL-DISPATCH** | 多数据源分发引擎 | 单元测试 | 执行 `TestFetchSocialData_MultiPlatform` | 验证 6 大数据源均正确路由至对应的真实 TikHub 采集实现，各平台独立解析，0 降级 mock 伪造 |
 
 ---
 
